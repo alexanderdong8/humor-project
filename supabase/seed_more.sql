@@ -1,0 +1,25 @@
+-- Extra rows added after schema.sql, so the list page has enough jokes to paginate.
+
+insert into public.jokes (setup, punchline, category) values
+  ('Why did the bicycle fall over?', 'It was two-tired.', 'Puns'),
+  ('What do you call cheese that isn''t yours?', 'Nacho cheese.', 'Food'),
+  ('Why don''t skeletons fight each other?', 'They don''t have the guts.', 'Puns'),
+  ('How do you organize a space party?', 'You planet.', 'Space'),
+  ('Why did the developer go broke?', 'Because they used up all their cache.', 'Tech'),
+  ('What did the ocean say to the beach?', 'Nothing, it just waved.', 'Nature'),
+  ('Why are fish so smart?', 'Because they live in schools.', 'Animals'),
+  ('What do you call a sleeping dinosaur?', 'A dino-snore.', 'Animals'),
+  ('Why did the tomato turn red?', 'Because it saw the salad dressing.', 'Food'),
+  ('What''s an astronaut''s favorite part of a computer?', 'The space bar.', 'Tech'),
+  ('Why did the student eat his homework?', 'The teacher said it was a piece of cake.', 'School'),
+  ('What do you call a factory that makes okay products?', 'A satisfactory.', 'Puns'),
+  ('Why do cows wear bells?', 'Because their horns don''t work.', 'Animals'),
+  ('How does a penguin build its house?', 'Igloos it together.', 'Animals'),
+  ('Why did the physics teacher break up with the biology teacher?', 'There was no chemistry.', 'Science'),
+  ('What do you call a boomerang that won''t come back?', 'A stick.', 'Puns'),
+  ('Why was the computer cold?', 'It left its Windows open.', 'Tech'),
+  ('What did one plate say to the other?', 'Dinner is on me.', 'Food'),
+  ('Why couldn''t the sun go to college?', 'Because it already had a million degrees.', 'Space'),
+  ('What do you call a pony with a cough?', 'A little hoarse.', 'Animals'),
+  ('Why did the pencil get promoted?', 'It always made its point.', 'School'),
+  ('What kind of tree fits in your hand?', 'A palm tree.', 'Nature');
