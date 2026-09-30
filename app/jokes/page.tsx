@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { supabase, type Joke } from "@/lib/supabase";
+import type { Joke } from "@/lib/jokes";
+import { createClient } from "@/lib/supabase/server";
 import styles from "./jokes.module.css";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default async function JokesPage(props: PageProps<"/jokes">) {
   const page = Number.isInteger(requested) && requested > 0 ? requested : 1;
   const from = (page - 1) * PAGE_SIZE;
 
+  const supabase = await createClient();
   const { data: jokes, count, error } = await supabase
     .from("jokes")
     .select("id, setup, punchline, category, created_at", { count: "exact" })

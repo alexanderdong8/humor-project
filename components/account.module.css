@@ -1,0 +1,262 @@
+/* Shared styles for the login, onboarding, profile, and members pages. */
+
+.page {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  width: 100%;
+  padding: clamp(2rem, 6vw, 4.5rem) 1rem 4rem;
+}
+
+.panel {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 2.75rem);
+  border: 1px solid rgba(157, 180, 216, 0.18);
+  border-radius: 22px;
+  background: rgba(20, 26, 53, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.narrow {
+  max-width: 520px;
+}
+
+.eyebrow {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #9db4d8;
+}
+
+.title {
+  margin-top: 0.4em;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  background: linear-gradient(100deg, #fff6e0, #ffd166, #f2506e, #4cc9f0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lede {
+  margin: 1rem 0 2rem;
+  line-height: 1.55;
+  color: #b9c8e2;
+}
+
+.lede strong {
+  color: #eaf2ff;
+}
+
+.sectionTitle {
+  margin: 2.25rem 0 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(157, 180, 216, 0.14);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #9db4d8;
+}
+
+/* Buttons */
+
+.primary,
+.secondary,
+.googleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 2.9rem;
+  padding: 0 1.4rem;
+  border-radius: 999px;
+  font: 600 0.95rem var(--font-geist-sans), system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.primary {
+  border: 0;
+  background: #ffd166;
+  color: #05060e;
+}
+
+.primary:hover {
+  background: #ffe19a;
+}
+
+.secondary {
+  border: 1px solid rgba(157, 180, 216, 0.35);
+  background: transparent;
+  color: #eaf2ff;
+}
+
+.secondary:hover {
+  border-color: #ffd166;
+  color: #ffd166;
+}
+
+.googleButton {
+  width: 100%;
+  border: 0;
+  background: #fff;
+  color: #1f1f1f;
+}
+
+.googleButton:hover {
+  background: #eef2f8;
+}
+
+.primary:disabled,
+.secondary:disabled,
+.googleButton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* Forms */
+
+.form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 1.1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: #b9c8e2;
+}
+
+.field em {
+  font-style: normal;
+  color: #6f84a8;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(157, 180, 216, 0.3);
+  border-radius: 12px;
+  background: rgba(5, 6, 14, 0.55);
+  color: #eaf2ff;
+  font: 1rem var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: 2px solid #ffd166;
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: #f2506e;
+}
+
+.fieldError {
+  color: #ff8fa3;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: 0.5rem;
+}
+
+.hint {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #6f84a8;
+}
+
+.error,
+.success {
+  font-size: 0.9rem;
+}
+
+.error {
+  margin-top: 0.75rem;
+  color: #ff8fa3;
+}
+
+.success {
+  color: #7ee2b8;
+}
+
+/* Avatar */
+
+.avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #b5179e, #4cc9f0);
+  color: #fff;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarUploader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+/* Members page */
+
+.greeting {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.jokeList {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.jokeList li {
+  padding: 1rem 1.2rem;
+  border: 1px solid rgba(157, 180, 216, 0.14);
+  border-radius: 14px;
+  background: rgba(5, 6, 14, 0.4);
+}
+
+.jokeSetup {
+  font-weight: 600;
+  color: #eaf2ff;
+}
+
+.jokePunchline {
+  margin-top: 0.35rem;
+  color: #ffd166;
+}

@@ -1,0 +1,101 @@
+.header {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid rgba(157, 180, 216, 0.12);
+  background: rgba(5, 6, 14, 0.55);
+  backdrop-filter: blur(10px);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+  color: #9db4d8;
+}
+
+.nav a {
+  transition: color 0.2s;
+}
+
+.nav a:hover {
+  color: #ffd166;
+}
+
+.brand {
+  font-weight: 700;
+  color: #eaf2ff;
+}
+
+.locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  opacity: 0.75;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profileLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #eaf2ff;
+}
+
+.profileLink:hover .name {
+  color: #ffd166;
+}
+
+.signIn,
+.signOut {
+  padding: 0.5em 1.1em;
+  border: 1px solid rgba(255, 209, 102, 0.45);
+  border-radius: 999px;
+  background: transparent;
+  color: #ffd166;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.signIn:hover,
+.signOut:hover {
+  background: #ffd166;
+  color: #05060e;
+}
+
+.prompt {
+  position: relative;
+  z-index: 3;
+  padding: 0.7rem 1rem;
+  background: rgba(255, 209, 102, 0.12);
+  border-bottom: 1px solid rgba(255, 209, 102, 0.3);
+  color: #ffe6a8;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.prompt a {
+  font-weight: 700;
+  color: #ffd166;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .name {
+    display: none;
+  }
+}
