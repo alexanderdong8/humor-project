@@ -5,7 +5,10 @@ import { getJokeCategories } from "@/lib/jokes";
 import { ProfileForm } from "@/components/profile-form";
 import styles from "@/components/account.module.css";
 
-export const metadata: Metadata = { title: "Finish your profile" };
+export const metadata: Metadata = {
+  title: "Finish your profile",
+  robots: { index: false },
+};
 
 export default async function OnboardingPage() {
   const { user, profile } = await requireUser();
@@ -14,12 +17,15 @@ export default async function OnboardingPage() {
   const categories = await getJokeCategories();
 
   return (
-    <main className={styles.page}>
-      <section className={`${styles.panel} ${styles.narrow}`}>
-        <p className={styles.eyebrow}>One quick thing</p>
-        <h1 className={styles.title}>What should we call you?</h1>
+    <main id="main" className={styles.page}>
+      <section className={`${styles.panel} ${styles.narrow} ${styles.card}`}>
+        <p className={styles.kicker}>Step 1 of 1</p>
+        <h1 className={styles.title}>
+          What should we <em>call you?</em>
+        </h1>
         <p className={styles.lede}>
-          You&apos;re signed in as <strong>{user.email}</strong>. Add your name to get into the Green Room.
+          You&apos;re signed in as <strong>{user.email}</strong>. Add your name and we&apos;ll open
+          the Green Room.
         </p>
         <ProfileForm
           mode="onboarding"

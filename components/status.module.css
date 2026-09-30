@@ -1,0 +1,120 @@
+/* 404, error, and loading states. */
+
+.wrap {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  padding: 4rem var(--gutter) 0;
+  text-align: center;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.title {
+  max-width: 18ch;
+  margin: 0.9rem auto 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 500;
+  font-variation-settings: "SOFT" 50, "opsz" 144;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.title em {
+  font-style: italic;
+  font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144;
+  color: var(--amber);
+}
+
+.body {
+  max-width: 34rem;
+  margin: 1rem auto 2rem;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 1.4rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.primary {
+  border: 0;
+  background: var(--amber);
+  color: var(--ink);
+}
+
+.primary:hover {
+  background: var(--amber-hover);
+}
+
+.secondary {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--cream);
+}
+
+.secondary:hover {
+  border-color: var(--cream);
+}
+
+/* Loading skeletons */
+
+.skeletonPage {
+  width: 100%;
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 7vw, 5rem) var(--gutter) 0;
+}
+
+.bar,
+.block {
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--ink-2) 0%, var(--ink-3) 50%, var(--ink-2) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.bar {
+  height: 1rem;
+}
+
+.block {
+  height: 150px;
+  border-radius: var(--radius);
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}

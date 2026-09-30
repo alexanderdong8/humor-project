@@ -10,8 +10,8 @@ export function ProfilePrompt() {
 
   return (
     <p className={styles.prompt} role="status">
-      Almost there — add your first and last name to finish your profile.{" "}
-      <Link href="/onboarding">Finish profile →</Link>
+      <span>Your profile is missing a name.</span>
+      <Link href="/onboarding">Finish setting up</Link>
     </p>
   );
 }

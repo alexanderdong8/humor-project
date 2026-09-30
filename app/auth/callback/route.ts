@@ -12,16 +12,16 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
 
   if (!code) {
-    const reason = searchParams.get("error_description") ?? "Missing sign-in code.";
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(reason)}`);
+    console.error("[auth/callback] missing code", searchParams.get("error"), searchParams.get("error_description"));
+    return NextResponse.redirect(`${origin}/login?error=signin_failed`);
   }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.user) {
-    const reason = error?.message ?? "Couldn't sign you in.";
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(reason)}`);
+    console.error("[auth/callback] code exchange failed", error?.message);
+    return NextResponse.redirect(`${origin}/login?error=signin_failed`);
   }
 
   const { data: profile } = await supabase

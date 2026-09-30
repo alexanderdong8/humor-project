@@ -4,7 +4,10 @@ import { getSession, isProfileComplete } from "@/lib/auth";
 import styles from "@/components/account.module.css";
 import { GoogleButton } from "./google-button";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in with Google to enter the Green Room.",
+};
 
 export default async function LoginPage(props: PageProps<"/login">) {
   const { user, profile } = await getSession();
@@ -13,19 +16,24 @@ export default async function LoginPage(props: PageProps<"/login">) {
   const { error } = await props.searchParams;
 
   return (
-    <main className={styles.page}>
-      <section className={`${styles.panel} ${styles.narrow}`}>
-        <p className={styles.eyebrow}>Members only</p>
-        <h1 className={styles.title}>Get backstage.</h1>
+    <main id="main" className={styles.page}>
+      <section className={`${styles.panel} ${styles.narrow} ${styles.card} ${styles.centered}`}>
+        <p className={styles.kicker}>Members only</p>
+        <h1 className={styles.title}>
+          Welcome to the <em>Green Room.</em>
+        </h1>
         <p className={styles.lede}>
-          Sign in to reach the Green Room, pick a favorite kind of joke, and set up your profile.
+          Sign in to get a set of jokes picked for you and a profile of your own.
         </p>
         <GoogleButton />
         {typeof error === "string" && (
           <p className={styles.error} role="alert">
-            Sign-in failed: {error}
+            We couldn&apos;t sign you in. Please try again.
           </p>
         )}
+        <p className={styles.fine}>
+          We only use your Google account to sign you in. Your name and email are never shared.
+        </p>
       </section>
     </main>
   );

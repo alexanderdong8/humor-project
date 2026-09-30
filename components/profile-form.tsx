@@ -64,7 +64,7 @@ export function ProfileForm({ mode, categories, defaults }: Props) {
 
       <div className={styles.actions}>
         <button type="submit" className={styles.primary} disabled={pending}>
-          {pending ? "Saving…" : mode === "onboarding" ? "Continue backstage →" : "Save changes"}
+          {pending ? "Saving…" : mode === "onboarding" ? "Enter the Green Room" : "Save changes"}
         </button>
         <p
           className={state.status === "error" ? styles.error : styles.success}
