@@ -1,30 +1,37 @@
 import { createClient } from "@/lib/supabase/server";
 
-/** Caption voices members can pick. The descriptions go straight into the prompt. */
+/**
+ * Caption styles members can pick. `blurb` and `example` are shown in the
+ * picker so it's obvious what each one sounds like; `prompt` goes to the model.
+ */
 export const VOICES = {
-  online: {
-    label: "Chronically online",
-    blurb: "lowercase, group-chat brain",
+  groupchat: {
+    label: "Group chat",
+    blurb: "Casual and lowercase, like texting your friends.",
+    example: "not the pigeon commuting better than me",
     prompt:
-      "Chronically online Gen Z. Mostly lowercase, group-chat cadence, internet slang used naturally (not every line), the energy of a viral post caption. At most one emoji across all four captions.",
+      "Casual Gen Z group-chat energy. Mostly lowercase, internet slang used naturally (not in every line), reads like a viral post caption. At most one emoji across all four captions.",
   },
-  newyorker: {
-    label: "Jaded New Yorker",
-    blurb: "seen it all, unimpressed",
+  sarcastic: {
+    label: "Sarcastic",
+    blurb: "Dry and unimpressed, like a tired New Yorker.",
+    example: "Ah yes, another “quick” ride on the 1 train.",
     prompt:
-      "A jaded lifelong New Yorker who has seen it all. Unimpressed, dry, a little put-upon; complains about rent, the MTA, tourists, and anyone walking slowly.",
+      "Dry, sarcastic, and unimpressed, like a lifelong New Yorker who has seen it all. Understated, a little put-upon; rent, the MTA, tourists, and slow walkers are fair game.",
   },
-  midwest: {
-    label: "Midwest nice",
-    blurb: "ope, relentlessly polite",
+  wholesome: {
+    label: "Wholesome",
+    blurb: "Sweet, upbeat, and a little goofy.",
+    example: "This little guy is doing his best, and honestly, so am I.",
     prompt:
-      "A relentlessly polite Midwesterner who just moved to New York. Wholesome and earnest, says 'ope', compares everything to home (Target runs, casseroles, actual parking), gently baffled by the city.",
+      "Warm, wholesome, and a little goofy. Earnest and kind, like a friendly kid from the Midwest who's delighted by everything in the big city. No sarcasm.",
   },
-  deadpan: {
-    label: "Deadpan",
-    blurb: "flat, literal, bone-dry",
+  dramatic: {
+    label: "Dramatic",
+    blurb: "Over the top. Everything is a huge deal.",
+    example: "I have never been more betrayed than by this dining hall pizza.",
     prompt:
-      "Bone-dry deadpan. Flat, literal, understated statements that get funnier the more matter-of-fact they are. No exclamation points.",
+      "Wildly over the top and theatrical. Treat small, everyday things like epic tragedies or historic triumphs. Big words, bigger feelings.",
   },
 } as const;
 

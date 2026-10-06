@@ -8,7 +8,7 @@ import styles from "./battle.module.css";
 export const metadata: Metadata = {
   title: "Caption Battle",
   description:
-    "Upload a photo, get four AI-written captions in the voice you pick, and vote for the funniest. New theme every day.",
+    "Upload a photo, get four AI-written captions in the style you pick, and vote for the funniest. New theme every day.",
 };
 
 const TABS: { sort: FeedSort; label: string }[] = [
@@ -50,14 +50,29 @@ export default async function BattlePage(props: PageProps<"/battle">) {
             <em>{theme}</em>
           </h1>
           <p className={styles.lede}>
-            Upload a photo and our AI writes four captions in the voice you pick. Everyone votes, and the
-            funniest line wins the day. The board resets at midnight.
+            Post a funny photo, let AI write the captions, and vote on everyone else&apos;s. Today&apos;s theme
+            is just an idea for what to shoot; any photo works.
           </p>
         </div>
         <Link href={user ? "/battle/new" : "/login"} className={styles.primary}>
           {user ? "Caption a photo" : "Sign in to play"}
         </Link>
       </header>
+
+      <ol className={styles.howItWorks} aria-label="How it works">
+        <li>
+          <strong>Post a photo</strong>
+          <span>Anything that made you laugh: a subway moment, your dorm, a bodega cat.</span>
+        </li>
+        <li>
+          <strong>AI writes 4 captions</strong>
+          <span>Pick a style like Sarcastic or Wholesome, and get four different jokes in seconds.</span>
+        </li>
+        <li>
+          <strong>Everyone votes</strong>
+          <span>The funniest caption rises to the top. Today&apos;s board resets at midnight.</span>
+        </li>
+      </ol>
 
       <nav className={styles.tabs} aria-label="Sort posts">
         {TABS.map((tab) => (

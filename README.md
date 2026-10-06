@@ -9,7 +9,7 @@ Built with Next.js 16 (App Router) and Supabase (Postgres, Auth, Storage), deplo
 - **Joke of the day** on the home page, the same for every visitor on a given day.
 - **Google sign-in** via Supabase Auth. New users get a `profiles` row from a database trigger and are asked for their name before entering.
 - **Profile** (`/profile`): edit first and last name and a favorite category, and upload a photo to Supabase Storage.
-- **Caption Battle** (`/battle`): members upload a photo, pick a voice (Chronically online, Jaded New Yorker, Midwest nice, Deadpan), and Claude writes four captions. Everyone can browse; signed-in members vote each caption up or down. A new theme every day, and the "Today's top" board resets at midnight Eastern. Each post has a shareable page.
+- **Caption Battle** (`/battle`): members upload a photo, pick a caption style (Group chat, Sarcastic, Wholesome, Dramatic), and Google Gemini writes four captions. Everyone can browse; signed-in members vote each caption up or down. A new theme every day, and the "Today's top" board resets at midnight Eastern. Each post has a shareable page.
 - **Green Room** (`/members`): members-only picks based on your favorite category. Signed-out visitors are redirected to `/login`.
 
 ## Local development
@@ -19,6 +19,7 @@ Built with Next.js 16 (App Router) and Supabase (Postgres, Auth, Storage), deplo
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable or anon key>
+   GEMINI_API_KEY=<key from aistudio.google.com/apikey>
    ```
 3. Run `npm run dev` and open http://localhost:3000
 
@@ -42,7 +43,7 @@ Run these in the Supabase SQL Editor, in order. Each one is safe to re-run excep
 
 ## AI captions
 
-Captions come from Claude Haiku 4.5 through the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) using the official `@anthropic-ai/sdk`. On Vercel the app authenticates with the project's OIDC token, so no API key is stored. Locally, run `vercel env pull .env.local` to get a fresh token (it lasts about 12 hours), or set `AI_GATEWAY_API_KEY`. The gateway needs a credit card on the Vercel team to unlock its free monthly credit.
+Captions come from Google Gemini (`gemini-3.5-flash`, falling back to `gemini-3.8-flash` and `gemini-3.5-flash-lite` when a model is busy) through the official `@google/genai` SDK. Set `GEMINI_API_KEY` in `.env` and in the Vercel project. It is read only on the server and never exposed to the browser.
 
 Every post stores the exact text prompt sent to the model (`generations.prompt`) and the model id. Photos live in Supabase Storage, never in Postgres. Members can post 10 times per 24 hours, enforced by RLS.
 
@@ -52,4 +53,4 @@ RLS is on for every table. Anyone can read jokes, posts, and captions. Members c
 
 ## Deploying
 
-Set both `NEXT_PUBLIC_SUPABASE_*` variables in the Vercel project for every environment, then run `vercel deploy --prod`. Git pushes also deploy automatically once the repository is connected in Vercel.
+Set both `NEXT_PUBLIC_SUPABASE_*` variables and `GEMINI_API_KEY` in the Vercel project for every environment, then run `vercel deploy --prod`. Git pushes also deploy automatically once the repository is connected in Vercel.

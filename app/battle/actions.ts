@@ -30,7 +30,7 @@ export async function createPost(input: {
   }
   if (!isVoice(input.voice)) {
     await discardUpload();
-    return { error: "Pick a voice for your captions." };
+    return { error: "Pick a caption style." };
   }
 
   const { data: usedToday } = await supabase.rpc("my_generations_today");

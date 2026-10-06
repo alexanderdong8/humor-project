@@ -20,7 +20,12 @@ export default async function NewPostPage() {
   const { data: usedToday } = await supabase.rpc("my_generations_today");
   const remaining = Math.max(0, DAILY_POST_LIMIT - (usedToday ?? 0));
 
-  const voices = Object.entries(VOICES).map(([id, v]) => ({ id, label: v.label, blurb: v.blurb }));
+  const voices = Object.entries(VOICES).map(([id, v]) => ({
+    id,
+    label: v.label,
+    blurb: v.blurb,
+    example: v.example,
+  }));
 
   return (
     <main id="main" className={styles.main}>
@@ -30,10 +35,12 @@ export default async function NewPostPage() {
       <section className={styles.composer}>
         <p className={styles.kicker}>New post</p>
         <h1 className={styles.composerTitle}>
-          Give us a photo. <em>We&apos;ll bring the bit.</em>
+          Give us a photo. <em>We&apos;ll write the jokes.</em>
         </h1>
         <p className={styles.lede}>
-          Our AI writes four captions in the voice you pick. Then everyone votes on the funniest.
+          Upload any photo, from your camera roll or something you just saw on the street. AI writes four
+          funny captions for it, and your post goes on the board, where everyone votes for the caption that
+          made them laugh most.
         </p>
 
         {remaining === 0 ? (

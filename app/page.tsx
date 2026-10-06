@@ -75,7 +75,7 @@ export default async function Home() {
             <em>{theme}</em>
           </h2>
           <p className={styles.battleLede}>
-            Snap it, upload it, and our AI writes four captions in the voice you pick. The crowd votes, and
+            Snap it, upload it, and AI writes four captions in the style you pick. Everyone votes, and
             the best line wins the day.
           </p>
           <div className={styles.ctas}>

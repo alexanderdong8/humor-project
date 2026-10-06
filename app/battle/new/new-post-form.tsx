@@ -8,7 +8,7 @@ import styles from "../battle.module.css";
 type Props = {
   userId: string;
   theme: string;
-  voices: { id: string; label: string; blurb: string }[];
+  voices: { id: string; label: string; blurb: string; example: string }[];
   remaining: number;
 };
 
@@ -39,7 +39,7 @@ export function NewPostForm({ userId, theme, voices, remaining }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [voice, setVoice] = useState(voices[0]?.id ?? "online");
+  const [voice, setVoice] = useState(voices[0]?.id ?? "groupchat");
   const [useTheme, setUseTheme] = useState(true);
   const [stage, setStage] = useState<"idle" | "uploading" | "writing">("idle");
   const [line, setLine] = useState(0);
@@ -106,6 +106,9 @@ export function NewPostForm({ userId, theme, voices, remaining }: Props) {
 
   return (
     <form className={styles.form} onSubmit={submit}>
+      <h2 className={styles.step}>
+        <span>1</span> Add a photo
+      </h2>
       <div
         className={styles.drop}
         data-dragging={dragging || undefined}
@@ -153,28 +156,36 @@ export function NewPostForm({ userId, theme, voices, remaining }: Props) {
       )}
 
       <fieldset className={styles.voices} disabled={busy}>
-        <legend>Pick a voice</legend>
+        <legend className={styles.step}>
+          <span>2</span> Pick how the captions should sound
+        </legend>
         <div className={styles.voiceGrid}>
           {voices.map((v) => (
             <label key={v.id} className={styles.voice} data-checked={voice === v.id || undefined}>
               <input type="radio" name="voice" value={v.id} checked={voice === v.id} onChange={() => setVoice(v.id)} />
               <span className={styles.voiceLabel}>{v.label}</span>
               <span className={styles.voiceBlurb}>{v.blurb}</span>
+              <span className={styles.voiceExample}>“{v.example}”</span>
             </label>
           ))}
         </div>
       </fieldset>
 
-      <label className={styles.themeToggle}>
-        <input type="checkbox" checked={useTheme} onChange={(e) => setUseTheme(e.target.checked)} disabled={busy} />
-        <span>
-          Play today&apos;s theme: <strong>{theme}</strong>
-        </span>
-      </label>
+      <div>
+        <h2 className={styles.step}>
+          <span>3</span> Today&apos;s theme <em>(optional)</em>
+        </h2>
+        <label className={styles.themeToggle}>
+          <input type="checkbox" checked={useTheme} onChange={(e) => setUseTheme(e.target.checked)} disabled={busy} />
+          <span>
+            Tie the captions to <strong>{theme}</strong> if the photo fits
+          </span>
+        </label>
+      </div>
 
       <div className={styles.submitRow}>
         <button type="submit" className={styles.primary} disabled={!file || busy}>
-          {stage === "uploading" ? "Uploading…" : stage === "writing" ? WRITING_LINES[line] : "Write my captions"}
+          {stage === "uploading" ? "Uploading…" : stage === "writing" ? WRITING_LINES[line] : "Write 4 captions"}
         </button>
         <p className={styles.hint}>
           {remaining} {remaining === 1 ? "post" : "posts"} left today
