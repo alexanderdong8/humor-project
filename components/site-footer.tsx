@@ -13,6 +13,7 @@ export function SiteFooter() {
         </div>
         <nav className={styles.links} aria-label="Footer">
           <Link href="/jokes">Library</Link>
+          <Link href="/battle">Caption Battle</Link>
           <Link href="/members">Green Room</Link>
           <Link href="/profile">Profile</Link>
         </nav>

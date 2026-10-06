@@ -9,6 +9,7 @@ Built with Next.js 16 (App Router) and Supabase (Postgres, Auth, Storage), deplo
 - **Joke of the day** on the home page, the same for every visitor on a given day.
 - **Google sign-in** via Supabase Auth. New users get a `profiles` row from a database trigger and are asked for their name before entering.
 - **Profile** (`/profile`): edit first and last name and a favorite category, and upload a photo to Supabase Storage.
+- **Caption Battle** (`/battle`): members upload a photo, pick a voice (Chronically online, Jaded New Yorker, Midwest nice, Deadpan), and Claude writes four captions. Everyone can browse; signed-in members vote each caption up or down. A new theme every day, and the "Today's top" board resets at midnight Eastern. Each post has a shareable page.
 - **Green Room** (`/members`): members-only picks based on your favorite category. Signed-out visitors are redirected to `/login`.
 
 ## Local development
@@ -31,12 +32,23 @@ Run these in the Supabase SQL Editor, in order. Each one is safe to re-run excep
 | `supabase/seed_more.sql` | More jokes |
 | `supabase/auth_profiles.sql` | `profiles` table, `on_auth_user_created` trigger, owner-only RLS, `avatars` Storage bucket |
 | `supabase/joke_categories.sql` | `joke_categories` view (category counts) |
+| `supabase/captions.sql` | `generations`, `captions`, `caption_votes` tables, vote-tally and author triggers, strict RLS, `caption-photos` Storage bucket |
 
 ## Auth setup
 
 - **Google Cloud:** create an OAuth client (Web application) with the redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`.
 - **Supabase → Authentication → Providers → Google:** paste the client ID and secret.
 - **Supabase → Authentication → URL Configuration:** set the Site URL to the production domain, and allow `http://localhost:3000/auth/callback` plus `https://<your-vercel-project>-*.vercel.app/auth/callback`.
+
+## AI captions
+
+Captions come from Claude Haiku 4.5 through the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) using the official `@anthropic-ai/sdk`. On Vercel the app authenticates with the project's OIDC token, so no API key is stored. Locally, run `vercel env pull .env.local` to get a fresh token (it lasts about 12 hours), or set `AI_GATEWAY_API_KEY`. The gateway needs a credit card on the Vercel team to unlock its free monthly credit.
+
+Every post stores the exact text prompt sent to the model (`generations.prompt`) and the model id. Photos live in Supabase Storage, never in Postgres. Members can post 10 times per 24 hours, enforced by RLS.
+
+## Row level security
+
+RLS is on for every table. Anyone can read jokes, posts, and captions. Members can only read and edit their own profile, create posts under their own id (10 per day), add captions to their own new post, and see or change their own votes. Vote tallies and post authors are written by triggers, so they can't be spoofed from the client.
 
 ## Deploying
 

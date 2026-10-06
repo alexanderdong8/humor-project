@@ -10,6 +10,16 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    // Caption Battle photos are served from Supabase Storage.
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cfwupbqjswtvvpcpxnzc.supabase.co",
+        pathname: "/storage/v1/object/public/caption-photos/**",
+      },
+    ],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

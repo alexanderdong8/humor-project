@@ -15,6 +15,9 @@ export function NavLinks({ signedIn }: Props) {
       <Link href="/jokes" aria-current={current("/jokes")}>
         Library
       </Link>
+      <Link href="/battle" aria-current={pathname.startsWith("/battle") ? "page" : undefined}>
+        Battle
+      </Link>
       {signedIn ? (
         <Link href="/members" aria-current={current("/members")}>
           Green Room

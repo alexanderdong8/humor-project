@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { JokeCard } from "@/components/joke-card";
 import { getSession } from "@/lib/auth";
+import { getTopCaptionToday, themeForDate } from "@/lib/battle";
 import { getJokeCategoryCounts, getJokeOfTheDay } from "@/lib/jokes";
 import styles from "./page.module.css";
 
 export default async function Home() {
-  const [{ user, profile }, jokeOfTheDay, categories] = await Promise.all([
+  const [{ user, profile }, jokeOfTheDay, categories, topCaption] = await Promise.all([
     getSession(),
     getJokeOfTheDay(),
     getJokeCategoryCounts(),
+    getTopCaptionToday(),
   ]);
+  const theme = themeForDate();
   const totalJokes = categories.reduce((sum, c) => sum + c.joke_count, 0);
 
   return (
@@ -64,6 +67,42 @@ export default async function Home() {
           </div>
         </dl>
       )}
+
+      <section className={styles.battle} aria-labelledby="battle-title">
+        <div className={styles.battleCopy}>
+          <p className={styles.kicker}>Caption Battle · Today</p>
+          <h2 id="battle-title" className={styles.bandTitle}>
+            <em>{theme}</em>
+          </h2>
+          <p className={styles.battleLede}>
+            Snap it, upload it, and our AI writes four captions in the voice you pick. The crowd votes, and
+            the best line wins the day.
+          </p>
+          <div className={styles.ctas}>
+            <Link href={user ? "/battle/new" : "/login"} className={styles.primary}>
+              {user ? "Caption a photo" : "Sign in to play"}
+            </Link>
+            <Link href="/battle" className={styles.secondary}>
+              See today&apos;s board
+            </Link>
+          </div>
+        </div>
+        {topCaption ? (
+          <Link href={`/battle/${topCaption.generation_id}`} className={styles.leader}>
+            <span className={styles.leaderPhoto} style={{ backgroundImage: `url(${topCaption.generations.image_url})` }} />
+            <span className={styles.leaderBody}>
+              <span className={styles.leaderLabel}>Leading today · {topCaption.score} pts</span>
+              <span className={styles.leaderText}>{topCaption.text}</span>
+              <span className={styles.leaderBy}>{topCaption.generations.author_name ?? "A member"}</span>
+            </span>
+          </Link>
+        ) : (
+          <div className={styles.leaderEmpty}>
+            <span className={styles.leaderLabel}>No leader yet</span>
+            <p>Today&apos;s crown is up for grabs. Post the first photo.</p>
+          </div>
+        )}
+      </section>
 
       {categories.length > 0 && (
         <section className={styles.section} aria-labelledby="categories-title">
