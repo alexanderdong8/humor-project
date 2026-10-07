@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isProfileComplete, requireUser } from "@/lib/auth";
-import { DAILY_POST_LIMIT, themeForDate, VOICES } from "@/lib/battle";
+import { DAILY_POST_LIMIT, VOICES } from "@/lib/battle";
+import { getDailyTheme } from "@/lib/daily-theme";
 import { createClient } from "@/lib/supabase/server";
 import { NewPostForm } from "./new-post-form";
 import styles from "../battle.module.css";
@@ -19,6 +20,7 @@ export default async function NewPostPage() {
   const supabase = await createClient();
   const { data: usedToday } = await supabase.rpc("my_generations_today");
   const remaining = Math.max(0, DAILY_POST_LIMIT - (usedToday ?? 0));
+  const daily = await getDailyTheme();
 
   const voices = Object.entries(VOICES).map(([id, v]) => ({
     id,
@@ -52,7 +54,7 @@ export default async function NewPostPage() {
             </Link>
           </div>
         ) : (
-          <NewPostForm userId={user.id} theme={themeForDate()} voices={voices} remaining={remaining} />
+          <NewPostForm userId={user.id} theme={daily.theme} voices={voices} remaining={remaining} />
         )}
       </section>
     </main>

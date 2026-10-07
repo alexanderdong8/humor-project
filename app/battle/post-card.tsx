@@ -22,8 +22,6 @@ export function timeAgo(iso: string) {
 type Props = {
   post: Post;
   myVotes: Map<string, 1 | -1>;
-  signedIn: boolean;
-  variant?: "card" | "detail";
   priority?: boolean;
 };
 
@@ -41,7 +39,7 @@ export function PostMeta({ post }: { post: Post }) {
   );
 }
 
-export function CaptionList({ post, myVotes, signedIn }: Omit<Props, "variant" | "priority">) {
+export function CaptionList({ post, myVotes }: Omit<Props, "priority">) {
   const best = Math.max(...post.captions.map((c) => c.score));
 
   return (
@@ -57,7 +55,6 @@ export function CaptionList({ post, myVotes, signedIn }: Omit<Props, "variant" |
             upvotes={caption.upvotes}
             downvotes={caption.downvotes}
             myVote={myVotes.get(caption.id) ?? 0}
-            signedIn={signedIn}
           />
         </li>
       ))}
@@ -65,7 +62,7 @@ export function CaptionList({ post, myVotes, signedIn }: Omit<Props, "variant" |
   );
 }
 
-export function PostCard({ post, myVotes, signedIn, priority = false }: Props) {
+export function PostCard({ post, myVotes, priority = false }: Props) {
   return (
     <article className={styles.card}>
       <Link href={`/battle/${post.id}`} className={styles.photo} aria-label="Open this post">
@@ -79,7 +76,7 @@ export function PostCard({ post, myVotes, signedIn, priority = false }: Props) {
       </Link>
       <div className={styles.cardBody}>
         <PostMeta post={post} />
-        <CaptionList post={post} myVotes={myVotes} signedIn={signedIn} />
+        <CaptionList post={post} myVotes={myVotes} />
       </div>
     </article>
   );

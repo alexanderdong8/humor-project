@@ -468,3 +468,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+.trendNote {
+  margin-top: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+}

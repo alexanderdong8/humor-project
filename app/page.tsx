@@ -1,18 +1,19 @@
 import Link from "next/link";
 import { JokeCard } from "@/components/joke-card";
 import { getSession } from "@/lib/auth";
-import { getTopCaptionToday, themeForDate } from "@/lib/battle";
+import { getTopCaptionToday } from "@/lib/battle";
+import { getDailyTheme } from "@/lib/daily-theme";
 import { getJokeCategoryCounts, getJokeOfTheDay } from "@/lib/jokes";
 import styles from "./page.module.css";
 
 export default async function Home() {
-  const [{ user, profile }, jokeOfTheDay, categories, topCaption] = await Promise.all([
+  const [{ user, profile }, jokeOfTheDay, categories, topCaption, daily] = await Promise.all([
     getSession(),
     getJokeOfTheDay(),
     getJokeCategoryCounts(),
     getTopCaptionToday(),
+    getDailyTheme(),
   ]);
-  const theme = themeForDate();
   const totalJokes = categories.reduce((sum, c) => sum + c.joke_count, 0);
 
   return (
@@ -72,8 +73,9 @@ export default async function Home() {
         <div className={styles.battleCopy}>
           <p className={styles.kicker}>Caption Battle · Today</p>
           <h2 id="battle-title" className={styles.bandTitle}>
-            <em>{theme}</em>
+            <em>{daily.theme}</em>
           </h2>
+          {daily.trend && <p className={styles.trendNote}>Inspired by “{daily.trend},” trending on X in New York today</p>}
           <p className={styles.battleLede}>
             Snap it, upload it, and AI writes four captions in the style you pick. Everyone votes, and
             the best line wins the day.
@@ -88,12 +90,12 @@ export default async function Home() {
           </div>
         </div>
         {topCaption ? (
-          <Link href={`/battle/${topCaption.generation_id}`} className={styles.leader}>
-            <span className={styles.leaderPhoto} style={{ backgroundImage: `url(${topCaption.generations.image_url})` }} />
+          <Link href={`/battle/${topCaption.id}`} className={styles.leader}>
+            <span className={styles.leaderPhoto} style={{ backgroundImage: `url(${topCaption.image_url})` }} />
             <span className={styles.leaderBody}>
-              <span className={styles.leaderLabel}>Leading today · {topCaption.score} pts</span>
-              <span className={styles.leaderText}>{topCaption.text}</span>
-              <span className={styles.leaderBy}>{topCaption.generations.author_name ?? "A member"}</span>
+              <span className={styles.leaderLabel}>Leading today · {topCaption.top_score} pts</span>
+              <span className={styles.leaderText}>{topCaption.top_caption}</span>
+              <span className={styles.leaderBy}>{topCaption.author_name ?? "A member"}</span>
             </span>
           </Link>
         ) : (

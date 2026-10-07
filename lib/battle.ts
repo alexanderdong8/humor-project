@@ -170,20 +170,35 @@ export async function getMyVotes(captionIds: string[]) {
   return votes;
 }
 
+/** What signed-out visitors (and link previews) get: a post's photo and winning caption only. */
+export type PostPreview = {
+  id: string;
+  image_url: string;
+  theme: string | null;
+  voice: VoiceId;
+  author_name: string | null;
+  created_at: string;
+  top_caption: string | null;
+  top_score: number;
+  caption_count: number;
+};
+
+/**
+ * Reads through the battle_preview database function, the only way
+ * signed-out visitors can see posts. It returns at most 3, ranked by score.
+ */
+export async function getPreview({ post, since, limit = 3 }: { post?: string; since?: string; limit?: number } = {}) {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("battle_preview", {
+    p_post: post ?? null,
+    p_since: since ?? null,
+    p_limit: limit,
+  });
+  return (data ?? []) as PostPreview[];
+}
+
 /** Today's best caption across every post, for the home page. */
 export async function getTopCaptionToday() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("captions")
-    .select("id, text, score, generation_id, generations!inner(id, image_url, author_name, created_at)")
-    .gte("generations.created_at", startOfNewYorkDay())
-    .gt("score", 0)
-    .order("score", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data as
-    | (Pick<Caption, "id" | "text" | "score" | "generation_id"> & {
-        generations: { id: string; image_url: string; author_name: string | null };
-      })
-    | null;
+  const [leader] = await getPreview({ since: startOfNewYorkDay(), limit: 1 });
+  return leader && leader.top_score > 0 && leader.top_caption ? leader : null;
 }

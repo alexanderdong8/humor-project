@@ -1,8 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { FEED_PAGE_SIZE, getFeed, getMyVotes, themeForDate, type FeedSort } from "@/lib/battle";
+import {
+  FEED_PAGE_SIZE,
+  getFeed,
+  getMyVotes,
+  getPreview,
+  startOfNewYorkDay,
+  type FeedSort,
+  type Post,
+} from "@/lib/battle";
+import { getDailyTheme } from "@/lib/daily-theme";
 import { PostCard } from "./post-card";
+import { MembersWall, PreviewCard } from "./preview";
 import styles from "./battle.module.css";
 
 export const metadata: Metadata = {
@@ -36,10 +46,17 @@ export default async function BattlePage(props: PageProps<"/battle">) {
   const requested = Number(first(searchParams.page));
   const page = Number.isInteger(requested) && requested > 0 ? requested : 1;
 
-  const [{ user }, { posts, total, error }] = await Promise.all([getSession(), getFeed(sort, page)]);
+  const [{ user }, daily] = await Promise.all([getSession(), getDailyTheme()]);
+
+  // Signed-out visitors can't read the board (RLS); they get a 3-post preview instead.
+  let previews = user ? [] : await getPreview({ since: startOfNewYorkDay() });
+  if (!user && previews.length === 0) previews = await getPreview();
+
+  const { posts, total, error } = user
+    ? await getFeed(sort, page)
+    : { posts: [] as Post[], total: 0, error: null };
   const myVotes = user ? await getMyVotes(posts.flatMap((p) => p.captions.map((c) => c.id))) : new Map();
   const totalPages = Math.max(1, Math.ceil(total / FEED_PAGE_SIZE));
-  const theme = themeForDate();
 
   return (
     <main id="main" className={styles.main}>
@@ -47,11 +64,16 @@ export default async function BattlePage(props: PageProps<"/battle">) {
         <div>
           <p className={styles.kicker}>Caption Battle · Today&apos;s theme</p>
           <h1 className={styles.title}>
-            <em>{theme}</em>
+            <em>{daily.theme}</em>
           </h1>
+          {daily.trend && (
+            <p className={styles.trendNote}>
+              Inspired by <strong>{daily.trend}</strong>, trending on X in New York today
+            </p>
+          )}
           <p className={styles.lede}>
-            Post a funny photo, let AI write the captions, and vote on everyone else&apos;s. Today&apos;s theme
-            is just an idea for what to shoot; any photo works.
+            {daily.idea ? `${daily.idea} ` : ""}Post a funny photo, let AI write the captions, and vote on
+            everyone else&apos;s. The theme is just an idea; any photo works.
           </p>
         </div>
         <Link href={user ? "/battle/new" : "/login"} className={styles.primary}>
@@ -74,6 +96,52 @@ export default async function BattlePage(props: PageProps<"/battle">) {
         </li>
       </ol>
 
+      {!user ? (
+        <>
+          <h2 className={styles.previewTitle}>Today&apos;s highlights</h2>
+          {previews.length > 0 ? (
+            <div className={styles.previewGrid}>
+              {previews.map((post, i) => (
+                <PreviewCard key={post.id} post={post} priority={i === 0} />
+              ))}
+            </div>
+          ) : (
+            <div className={styles.empty}>
+              <p className={styles.emptyTitle}>Nobody&apos;s on stage yet.</p>
+              <p>Sign in and be the first to post today.</p>
+            </div>
+          )}
+          <MembersWall />
+        </>
+      ) : (
+        <MemberFeed
+          sort={sort}
+          page={page}
+          totalPages={totalPages}
+          posts={posts}
+          error={Boolean(error)}
+          myVotes={myVotes}
+          theme={daily.theme}
+        />
+      )}
+    </main>
+  );
+}
+
+type MemberFeedProps = {
+  sort: FeedSort;
+  page: number;
+  totalPages: number;
+  posts: Post[];
+  error: boolean;
+  myVotes: Map<string, 1 | -1>;
+  theme: string;
+};
+
+/** The full board: every post, every caption, and voting. Members only. */
+function MemberFeed({ sort, page, totalPages, posts, error, myVotes, theme }: MemberFeedProps) {
+  return (
+    <>
       <nav className={styles.tabs} aria-label="Sort posts">
         {TABS.map((tab) => (
           <Link
@@ -100,15 +168,15 @@ export default async function BattlePage(props: PageProps<"/battle">) {
               ? `Be the first to caption “${theme}” today.`
               : "No posts yet. Be the first to start the battle."}
           </p>
-          <Link href={user ? "/battle/new" : "/login"} className={styles.secondary}>
-            {user ? "Caption a photo" : "Sign in to play"}
+          <Link href="/battle/new" className={styles.secondary}>
+            Caption a photo
           </Link>
         </div>
       ) : (
         <>
           <div className={styles.feed}>
             {posts.map((post, i) => (
-              <PostCard key={post.id} post={post} myVotes={myVotes} signedIn={Boolean(user)} priority={i < 2} />
+              <PostCard key={post.id} post={post} myVotes={myVotes} priority={i < 2} />
             ))}
           </div>
 
@@ -135,6 +203,6 @@ export default async function BattlePage(props: PageProps<"/battle">) {
           )}
         </>
       )}
-    </main>
+    </>
   );
 }

@@ -720,3 +720,115 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Signed-out preview */
+
+.trendNote {
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  color: var(--faint);
+}
+
+.trendNote strong {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.previewTitle {
+  margin: 3rem 0 1.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.previewGrid .caption {
+  margin-top: 1rem;
+}
+
+.locked {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  transition: border-color 0.2s var(--ease);
+}
+
+.locked:hover {
+  border-color: var(--amber);
+}
+
+.lockedBars {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lockedBars span {
+  height: 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ink-3), rgba(243, 236, 224, 0.08));
+  filter: blur(1.5px);
+}
+
+.lockedBars span:nth-child(2) {
+  width: 82%;
+}
+
+.lockedBars span:nth-child(3) {
+  width: 64%;
+}
+
+.lockedLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--amber);
+}
+
+.wall {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1.5rem 2rem;
+  margin-top: 2rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid rgba(242, 179, 61, 0.35);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse 60% 100% at 100% 0%, rgba(242, 179, 61, 0.1), transparent 70%),
+    var(--ink-2);
+}
+
+.wallTitle {
+  margin-top: 0.6rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.wallList {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding-left: 1.1rem;
+  color: var(--muted);
+}
+
+.wallList li::marker {
+  color: var(--amber);
+}

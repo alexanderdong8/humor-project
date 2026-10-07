@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { castVote } from "./actions";
 import styles from "./battle.module.css";
 
@@ -10,7 +9,6 @@ type Props = {
   upvotes: number;
   downvotes: number;
   myVote: 1 | -1 | 0;
-  signedIn: boolean;
 };
 
 function Arrow({ down = false }: { down?: boolean }) {
@@ -21,28 +19,16 @@ function Arrow({ down = false }: { down?: boolean }) {
   );
 }
 
-/** Up/down voting with an instant (optimistic) update that settles on the server's tally. */
-export function VoteButtons({ captionId, upvotes, downvotes, myVote, signedIn }: Props) {
+/**
+ * Up/down voting with an instant (optimistic) update that settles on the
+ * server's tally. Only rendered for signed-in members; the server action and
+ * RLS reject votes from anyone else.
+ */
+export function VoteButtons({ captionId, upvotes, downvotes, myVote }: Props) {
   const [state, setState] = useState({ upvotes, downvotes, myVote });
   const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
   const score = state.upvotes - state.downvotes;
-
-  if (!signedIn) {
-    return (
-      <div className={styles.votes}>
-        <Link href="/login" className={styles.voteButton} aria-label="Sign in to upvote" title="Sign in to vote">
-          <Arrow />
-        </Link>
-        <span className={styles.score} aria-label={`Score ${score}`}>
-          {score}
-        </span>
-        <Link href="/login" className={styles.voteButton} aria-label="Sign in to downvote" title="Sign in to vote">
-          <Arrow down />
-        </Link>
-      </div>
-    );
-  }
 
   function vote(value: 1 | -1) {
     const previous = state;

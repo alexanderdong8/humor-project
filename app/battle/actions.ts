@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CaptionWriterError, writeCaptions } from "@/lib/ai/caption-writer";
-import { DAILY_POST_LIMIT, isVoice, themeForDate } from "@/lib/battle";
+import { DAILY_POST_LIMIT, isVoice } from "@/lib/battle";
+import { getDailyTheme } from "@/lib/daily-theme";
 import { createClient } from "@/lib/supabase/server";
 
 const BUCKET = "caption-photos";
@@ -44,7 +45,7 @@ export async function createPost(input: {
     return { error: "We couldn't read your photo. Please try uploading it again." };
   }
   const mediaType = MEDIA_TYPES.find((t) => t === file.type) ?? "image/jpeg";
-  const theme = input.useTheme ? themeForDate() : null;
+  const theme = input.useTheme ? (await getDailyTheme()).theme : null;
 
   let result: Awaited<ReturnType<typeof writeCaptions>>;
   try {

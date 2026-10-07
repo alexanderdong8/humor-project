@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { JokeCard } from "@/components/joke-card";
+import { getSession } from "@/lib/auth";
 import { getJokeCategoryCounts, JOKE_COLUMNS, type Joke } from "@/lib/jokes";
 import { createClient } from "@/lib/supabase/server";
 import styles from "./jokes.module.css";
@@ -31,7 +32,9 @@ export default async function JokesPage(props: PageProps<"/jokes">) {
   const page = Number.isInteger(requested) && requested > 0 ? requested : 1;
   const from = (page - 1) * PAGE_SIZE;
 
-  const categories = await getJokeCategoryCounts();
+  const [categories, { user }] = await Promise.all([getJokeCategoryCounts(), getSession()]);
+  // Signed-out visitors get the first page of each category; the rest is for members.
+  if (!user && page > 1) redirect(libraryHref(first(searchParams.category) ?? null));
   const categoryParam = first(searchParams.category) ?? null;
   const category = categories.find((c) => c.category === categoryParam)?.category ?? null;
   // Unknown categories fall back to the full library instead of an empty page.
@@ -101,7 +104,21 @@ export default async function JokesPage(props: PageProps<"/jokes">) {
             ))}
           </ul>
 
-          {totalPages > 1 && (
+          {!user && totalPages > 1 && (
+            <div className={styles.wall}>
+              <div>
+                <p className={styles.wallTitle}>
+                  You&apos;re seeing {jokes.length} of {total} jokes.
+                </p>
+                <p>Sign in to unlock the whole library, the Green Room, and Caption Battle voting.</p>
+              </div>
+              <Link href="/login" className={styles.wallCta}>
+                Sign in with Google
+              </Link>
+            </div>
+          )}
+
+          {user && totalPages > 1 && (
             <nav className={styles.pagination} aria-label="Pagination">
               {page > 1 ? (
                 <Link href={libraryHref(category, page - 1)} className={styles.step} rel="prev">
