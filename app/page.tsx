@@ -4,7 +4,7 @@ import { JokeCard } from "@/components/joke-card";
 import { Mascot } from "@/components/mascot";
 import { getSession } from "@/lib/auth";
 import { getTopCaptionToday } from "@/lib/battle";
-import { getDailyTheme } from "@/lib/daily-theme";
+import { getDailyTheme, trendSourceLabel } from "@/lib/daily-theme";
 import { categoryEmoji, getJokeCategoryCounts, getJokeOfTheDay } from "@/lib/jokes";
 import styles from "./page.module.css";
 
@@ -80,7 +80,7 @@ export default async function Home() {
           </h2>
           {daily.trend && (
             <p className={styles.trend}>
-              📈 Inspired by <strong>{daily.trend}</strong>, trending on X in New York
+              📈 Inspired by <strong>{daily.trend}</strong>, {trendSourceLabel(daily.source)}
             </p>
           )}
           <ol className={styles.steps}>

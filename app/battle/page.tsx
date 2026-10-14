@@ -10,7 +10,7 @@ import {
   type FeedSort,
   type Post,
 } from "@/lib/battle";
-import { getDailyTheme } from "@/lib/daily-theme";
+import { getDailyTheme, trendSourceLabel } from "@/lib/daily-theme";
 import { Mascot } from "@/components/mascot";
 import { PostCard } from "./post-card";
 import { MembersWall, PreviewCard } from "./preview";
@@ -70,7 +70,7 @@ export default async function BattlePage(props: PageProps<"/battle">) {
           </h1>
           {daily.trend && (
             <p className={styles.trendNote}>
-              📈 Inspired by <strong>{daily.trend}</strong>, trending on X in New York today
+              📈 Inspired by <strong>{daily.trend}</strong>, {trendSourceLabel(daily.source)} today
             </p>
           )}
           <p className={styles.lede}>

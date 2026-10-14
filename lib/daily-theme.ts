@@ -42,16 +42,30 @@ export async function fetchXTrends(): Promise<string[]> {
   return [...scores].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([name]) => name);
 }
 
-/** Backup source: Google's official daily trending-searches RSS feed for the US. */
+/**
+ * Backup source: Google's official trending-searches RSS feeds, New York
+ * first and then the whole US. Used when X trends can't be fetched (trends24
+ * blocks requests from cloud servers such as Vercel's).
+ */
 export async function fetchGoogleTrends(): Promise<string[]> {
-  const res = await fetch("https://trends.google.com/trending/rss?geo=US", {
-    headers: { "user-agent": USER_AGENT },
-    signal: AbortSignal.timeout(8000),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`google trends responded ${res.status}`);
-  const xml = await res.text();
-  return [...xml.matchAll(/<item>\s*<title>([^<]+)<\/title>/g)].map((m) => decodeEntities(m[1].trim())).slice(0, 40);
+  const feeds = await Promise.all(
+    ["US-NY", "US"].map(async (geo) => {
+      const res = await fetch(`https://trends.google.com/trending/rss?geo=${geo}`, {
+        headers: { "user-agent": USER_AGENT },
+        signal: AbortSignal.timeout(8000),
+        cache: "no-store",
+      });
+      if (!res.ok) return [];
+      const xml = await res.text();
+      return [...xml.matchAll(/<item>\s*<title>([^<]+)<\/title>/g)].map((m) => decodeEntities(m[1].trim()));
+    }),
+  );
+  return [...new Set(feeds.flat())].slice(0, 40);
+}
+
+/** Where today's theme came from, in words for the page. */
+export function trendSourceLabel(source: DailyTheme["source"]) {
+  return source === "x" ? "trending on X in New York" : "trending in New York searches";
 }
 
 function decodeEntities(text: string) {
