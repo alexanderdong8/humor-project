@@ -9,6 +9,8 @@ type Props = {
   upvotes: number;
   downvotes: number;
   myVote: 1 | -1 | 0;
+  /** Head-to-head (Quick Vote) wins, which also count toward the score. */
+  bonus?: number;
 };
 
 /**
@@ -16,11 +18,11 @@ type Props = {
  * server's tally. Only rendered for signed-in members; the server action and
  * RLS reject votes from anyone else.
  */
-export function VoteButtons({ captionId, upvotes, downvotes, myVote }: Props) {
+export function VoteButtons({ captionId, upvotes, downvotes, myVote, bonus = 0 }: Props) {
   const [state, setState] = useState({ upvotes, downvotes, myVote });
   const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
-  const score = state.upvotes - state.downvotes;
+  const score = state.upvotes - state.downvotes + bonus;
 
   function vote(value: 1 | -1) {
     const previous = state;
@@ -58,7 +60,12 @@ export function VoteButtons({ captionId, upvotes, downvotes, myVote }: Props) {
       >
         <span aria-hidden="true">😂</span>
       </button>
-      <span className={styles.score} aria-live="polite" aria-label={`Score ${score}`}>
+      <span
+        className={styles.score}
+        aria-live="polite"
+        aria-label={`Score ${score}`}
+        title={bonus ? `Includes ${bonus} Quick Vote ${bonus === 1 ? "win" : "wins"}` : undefined}
+      >
         {score}
       </span>
       <button

@@ -1,14 +1,14 @@
 import { ApiError, GoogleGenAI } from "@google/genai";
-import { VOICES, type VoiceId } from "@/lib/battle";
+import { MOODS, VOICES, type MoodId, type VoiceId } from "@/lib/battle";
 
 /** Tried in order: if one model is overloaded or rate limited, the next one takes the job. */
-const MODELS = ["gemini-3.5-flash", "gemini-3.8-flash", "gemini-3.5-flash-lite"];
+export const MODELS = ["gemini-3.5-flash", "gemini-3.8-flash", "gemini-3.5-flash-lite"];
 
 const SYSTEM_PROMPT = `You write captions for Punchline, a comedy site where college students in New York post photos and vote on the funniest caption.
 
 Audience: Columbia undergrads who are chronically online, many of them new to New York, living in the dorms and exploring the city on weekends. Campus life, the subway, bodegas, dorms, dining halls, and being new to the city all land well.
 
-Write exactly 4 captions for the photo, all in the requested style. Each caption:
+Write exactly the number of captions requested, all in the requested style. Each caption:
 - reacts to what is actually in the photo; specific details beat generic jokes
 - takes a different angle from the others (an observation, an exaggeration, a relatable confession, an absurd twist)
 - is one or two short sentences, under 120 characters
@@ -16,18 +16,15 @@ Write exactly 4 captions for the photo, all in the requested style. Each caption
 
 Keep it PG-13 and punch up, never down. Don't joke about anyone's body, looks, race, ethnicity, religion, gender, sexuality, disability, or age, and don't identify or guess who real people in the photo are. If people are in the photo, joke about the situation, not the person.`;
 
-const RESPONSE_SCHEMA = {
-  type: "object",
-  properties: {
-    captions: {
-      type: "array",
-      items: { type: "string" },
-      minItems: 4,
-      maxItems: 4,
+function responseSchema(count: number) {
+  return {
+    type: "object",
+    properties: {
+      captions: { type: "array", items: { type: "string" }, minItems: count, maxItems: count },
     },
-  },
-  required: ["captions"],
-};
+    required: ["captions"],
+  };
+}
 
 export class CaptionWriterError extends Error {
   constructor(
@@ -38,18 +35,39 @@ export class CaptionWriterError extends Error {
   }
 }
 
-function userInstructions(voice: VoiceId, theme: string | null) {
+export type CaptionImage = { data: string; mediaType: "image/jpeg" | "image/png" | "image/webp" };
+
+type Input = {
+  image: CaptionImage;
+  voice: VoiceId;
+  theme: string | null;
+  /** How many captions to write: 4 for a new post, fewer for a remix. */
+  count?: number;
+  /** Remix mood, when adding more captions to an existing post. */
+  mood?: MoodId;
+  /** Captions already on the post, so a remix doesn't repeat them. */
+  avoid?: string[];
+};
+
+function userInstructions({ voice, theme, mood, avoid = [], count }: Omit<Input, "image"> & { count: number }) {
   const style = VOICES[voice];
-  return [
+  const lines = [
+    `Write ${count} captions.`,
     `Style: ${style.label}. ${style.prompt}`,
     `For flavor, an example in this style (don't reuse it): "${style.example}"`,
     theme
-      ? `Today's theme is "${theme}". Lean into it if the photo fits; never force it.`
+      ? `Theme: "${theme}". Lean into it if the photo fits; never force it.`
       : "There's no theme; caption whatever is in the photo.",
-  ].join("\n");
+  ];
+  if (mood) lines.push(`Remix mood: ${MOODS[mood].label}. ${MOODS[mood].prompt}`);
+  if (avoid.length > 0) {
+    lines.push("These captions already exist. Don't repeat them or their jokes; find new angles:");
+    for (const text of avoid) lines.push(`- ${text}`);
+  }
+  return lines.join("\n");
 }
 
-function parseCaptions(text: string | undefined) {
+function parseCaptions(text: string | undefined, count: number) {
   let raw: unknown;
   try {
     raw = (JSON.parse(text ?? "") as { captions?: unknown }).captions;
@@ -61,28 +79,23 @@ function parseCaptions(text: string | undefined) {
     .filter((c): c is string => typeof c === "string")
     .map((c) => c.trim().replace(/^["“]|["”]$/g, "").slice(0, 280))
     .filter(Boolean);
-  return [...new Set(cleaned)].slice(0, 4);
+  return [...new Set(cleaned)].slice(0, count);
 }
 
-type Input = {
-  image: { data: string; mediaType: "image/jpeg" | "image/png" | "image/webp" };
-  voice: VoiceId;
-  theme: string | null;
-};
-
 /**
- * Writes four captions for a photo with Google Gemini. Returns them with the
- * exact text prompt that was sent (the photo is stored separately) and the
- * model that answered, so all three can be saved with the post.
+ * Writes captions for a photo with Google Gemini: 4 for a new post, or a few
+ * more in a given mood for a remix. Returns them with the exact text prompt
+ * that was sent (the photo is stored separately) and the model that answered,
+ * so all three can be saved.
  */
-export async function writeCaptions({ image, voice, theme }: Input) {
+export async function writeCaptions({ image, count = 4, ...rest }: Input) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new CaptionWriterError("GEMINI_API_KEY is not set", "Our caption writer is offline right now.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  const instructions = userInstructions(voice, theme);
+  const instructions = userInstructions({ ...rest, count });
   let lastError: unknown;
 
   for (const model of MODELS) {
@@ -98,7 +111,7 @@ export async function writeCaptions({ image, voice, theme }: Input) {
         config: {
           systemInstruction: SYSTEM_PROMPT,
           responseMimeType: "application/json",
-          responseJsonSchema: RESPONSE_SCHEMA,
+          responseJsonSchema: responseSchema(count),
           temperature: 1,
         },
       });
@@ -110,7 +123,7 @@ export async function writeCaptions({ image, voice, theme }: Input) {
         );
       }
 
-      const captions = parseCaptions(response.text);
+      const captions = parseCaptions(response.text, count);
       if (captions.length === 0) {
         lastError = new Error(`${model} returned no captions`);
         continue;

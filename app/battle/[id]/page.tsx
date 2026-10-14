@@ -3,10 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getMyVotes, getPost, getPreview } from "@/lib/battle";
+import { getMyVotes, getPost, getPreview, REMIXES_PER_POST } from "@/lib/battle";
+import { createClient } from "@/lib/supabase/server";
 import { deletePost } from "../actions";
-import { CaptionList, PostMeta } from "../post-card";
+import { CaptionList, PhotoCredit, PostMeta } from "../post-card";
 import { LockedCaptions } from "../preview";
+import { RemixPanel } from "../remix-panel";
 import { ShareButton } from "../share-button";
 import styles from "../battle.module.css";
 
@@ -45,7 +47,11 @@ export default async function PostPage(props: PageProps<"/battle/[id]">) {
   const post = UUID.test(id) ? await getPost(id) : null;
   if (!post) notFound();
 
-  const myVotes = await getMyVotes(post.captions.map((c) => c.id));
+  const supabase = await createClient();
+  const [myVotes, { data: remixCount }] = await Promise.all([
+    getMyVotes(post.captions.map((c) => c.id)),
+    supabase.rpc("remix_count", { p_generation: post.id }),
+  ]);
   const isOwner = user.id === post.user_id;
 
   return (
@@ -61,14 +67,22 @@ export default async function PostPage(props: PageProps<"/battle/[id]">) {
       )}
 
       <article className={styles.detail}>
-        <div className={styles.detailPhoto}>
-          <Image src={post.image_url} alt="" fill sizes="(max-width: 860px) 100vw, 560px" priority />
+        <div className={styles.detailMedia}>
+          <div className={styles.detailPhoto}>
+            {post.kind === "daily" && <span className={styles.aiBadge}>🤖 Today&apos;s AI photo</span>}
+            <Image src={post.image_url} alt="" fill sizes="(max-width: 860px) 100vw, 560px" priority />
+          </div>
+          <PhotoCredit post={post} />
         </div>
 
         <div className={styles.detailBody}>
           <PostMeta post={post} />
           <h1 className={styles.detailTitle}>Which caption wins?</h1>
+          <p className={styles.hint}>
+            {post.captions.length} captions · <Link href="/battle/vote">⚡ Judge them head-to-head in Quick Vote</Link>
+          </p>
           <CaptionList post={post} myVotes={myVotes} />
+          <RemixPanel postId={post.id} remixesLeft={Math.max(0, REMIXES_PER_POST - (remixCount ?? 0))} />
 
           <div className={styles.detailActions}>
             <ShareButton />
@@ -94,13 +108,19 @@ function SignedOutPost({ preview }: { preview: NonNullable<Awaited<ReturnType<ty
       </Link>
 
       <article className={styles.detail}>
-        <div className={styles.detailPhoto}>
-          <Image src={preview.image_url} alt="" fill sizes="(max-width: 860px) 100vw, 560px" priority />
+        <div className={styles.detailMedia}>
+          <div className={styles.detailPhoto}>
+            {preview.kind === "daily" && <span className={styles.aiBadge}>🤖 Today&apos;s AI photo</span>}
+            <Image src={preview.image_url} alt="" fill sizes="(max-width: 860px) 100vw, 560px" priority />
+          </div>
+          <PhotoCredit post={preview} />
         </div>
 
         <div className={styles.detailBody}>
           <div className={styles.meta}>
-            <span className={styles.author}>{preview.author_name ?? "A member"}</span>
+            <span className={styles.author}>
+              {preview.kind === "daily" ? "🤖 Punchline AI" : (preview.author_name ?? "A member")}
+            </span>
             {preview.theme && (
               <span className={styles.chips}>
                 <span className={styles.chip}>{preview.theme}</span>

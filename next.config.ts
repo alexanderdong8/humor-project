@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
         hostname: "cfwupbqjswtvvpcpxnzc.supabase.co",
         pathname: "/storage/v1/object/public/caption-photos/**",
       },
+      // Openly licensed photos for the daily AI post (found through Openverse).
+      { protocol: "https", hostname: "**.staticflickr.com" },
+      { protocol: "https", hostname: "upload.wikimedia.org" },
     ],
   },
   async headers() {

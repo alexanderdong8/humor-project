@@ -10,11 +10,14 @@ export function PreviewCard({ post, priority = false }: { post: PostPreview; pri
   return (
     <article className={styles.card}>
       <div className={styles.photo}>
+        {post.kind === "daily" && <span className={styles.aiBadge}>🤖 Today&apos;s AI photo</span>}
         <Image src={post.image_url} alt="" fill sizes="(max-width: 860px) 100vw, 360px" priority={priority} />
       </div>
       <div className={styles.cardBody}>
         <div className={styles.meta}>
-          <span className={styles.author}>{post.author_name ?? "A member"}</span>
+          <span className={styles.author}>
+            {post.kind === "daily" ? "🤖 Punchline AI" : (post.author_name ?? "A member")}
+          </span>
           {post.theme && (
             <span className={styles.chips}>
               <span className={styles.chip}>{post.theme}</span>
@@ -61,9 +64,9 @@ export function MembersWall() {
           The full board is for members.
         </h2>
         <ul className={styles.wallList}>
-          <li>Every post and all four captions on each one</li>
-          <li>Voting, live scores, and today&apos;s leaderboard</li>
-          <li>Post your own photos (10 a day)</li>
+          <li>Every post and every caption, including today&apos;s AI photo</li>
+          <li>⚡ Quick Vote, live scores, and today&apos;s leaderboard</li>
+          <li>🔀 Remix any post, and post your own photos (10 a day)</li>
         </ul>
       </div>
       <Link href="/login" className="btn btn-primary">

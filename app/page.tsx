@@ -91,16 +91,29 @@ export default async function Home() {
               <span>🤖</span> AI writes 4 captions
             </li>
             <li>
-              <span>😂</span> Everyone votes
+              <span>⚡</span> Everyone votes, two at a time
             </li>
           </ol>
           <div className={styles.ctas}>
-            <Link href={user ? "/battle/new" : "/login"} className="btn btn-primary">
-              {user ? "Caption a photo" : "Sign in to play"}
-            </Link>
-            <Link href="/battle" className="btn btn-secondary">
-              See the board
-            </Link>
+            {user ? (
+              <>
+                <Link href="/battle/vote" className="btn btn-primary">
+                  ⚡ Quick Vote
+                </Link>
+                <Link href="/battle/new" className="btn btn-secondary">
+                  📸 Caption a photo
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="btn btn-primary">
+                  Sign in to play
+                </Link>
+                <Link href="/battle" className="btn btn-secondary">
+                  See the board
+                </Link>
+              </>
+            )}
           </div>
         </div>
         {topCaption ? (

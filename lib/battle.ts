@@ -101,6 +101,13 @@ export function themeForDate(date = newYorkDate()) {
 
 export const DAILY_POST_LIMIT = 10;
 
+export { isMood, MOODS, type MoodId } from "@/lib/moods";
+import type { MoodId } from "@/lib/moods";
+
+export const REMIX_CAPTIONS = 3;
+export const REMIXES_PER_POST = 6;
+export const REMIXES_PER_DAY = 20;
+
 export type Caption = {
   id: string;
   generation_id: string;
@@ -108,24 +115,35 @@ export type Caption = {
   text: string;
   upvotes: number;
   downvotes: number;
-  score: number;
+  duel_wins: number;
+  duel_losses: number;
+  score: number; // upvotes - downvotes + head-to-head wins
+  remix: { mood: MoodId } | null;
 };
 
 export type Post = {
   id: string;
-  user_id: string;
+  user_id: string | null;
+  kind: "member" | "daily";
   author_name: string | null;
   image_url: string;
   image_path: string;
   theme: string | null;
   voice: VoiceId;
   top_score: number;
+  photo_credit: string | null;
+  photo_source_url: string | null;
   created_at: string;
   captions: Caption[];
 };
 
 const POST_COLUMNS =
-  "id, user_id, author_name, image_url, image_path, theme, voice, top_score, created_at, captions(id, generation_id, position, text, upvotes, downvotes, score)";
+  "id, user_id, kind, author_name, image_url, image_path, theme, voice, top_score, photo_credit, photo_source_url, created_at, captions(id, generation_id, position, text, upvotes, downvotes, duel_wins, duel_losses, score, remix:caption_remixes(mood))";
+
+/** Best first: score, then original order. */
+export function rankCaptions(captions: Caption[]) {
+  return [...captions].sort((a, b) => b.score - a.score || a.position - b.position);
+}
 
 export type FeedSort = "today" | "new" | "top";
 
@@ -148,6 +166,18 @@ export async function getFeed(sort: FeedSort, page: number) {
     .returns<Post[]>();
 
   return { posts: data ?? [], total: count ?? 0, error };
+}
+
+/** Today's AI photo post, if the nightly job has made it. Members only (RLS). */
+export async function getDailyPost() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("generations")
+    .select(POST_COLUMNS)
+    .eq("daily_for", newYorkDate())
+    .order("position", { referencedTable: "captions" })
+    .maybeSingle<Post>();
+  return data;
 }
 
 export async function getPost(id: string) {
@@ -176,6 +206,9 @@ export async function getMyVotes(captionIds: string[]) {
 
 /** What signed-out visitors (and link previews) get: a post's photo and winning caption only. */
 export type PostPreview = {
+  kind: "member" | "daily";
+  photo_credit: string | null;
+  photo_source_url: string | null;
   id: string;
   image_url: string;
   theme: string | null;

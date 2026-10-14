@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import {
   FEED_PAGE_SIZE,
+  getDailyPost,
   getFeed,
   getMyVotes,
   getPreview,
@@ -54,10 +55,11 @@ export default async function BattlePage(props: PageProps<"/battle">) {
   const previewIsToday = previews.length > 0;
   if (!user && !previewIsToday) previews = await getPreview();
 
-  const { posts, total, error } = user
-    ? await getFeed(sort, page)
-    : { posts: [] as Post[], total: 0, error: null };
-  const myVotes = user ? await getMyVotes(posts.flatMap((p) => p.captions.map((c) => c.id))) : new Map();
+  const [{ posts, total, error }, dailyPost] = user
+    ? await Promise.all([getFeed(sort, page), sort === "today" && page === 1 ? getDailyPost() : null])
+    : [{ posts: [] as Post[], total: 0, error: null }, null];
+  const allCaptionIds = [...posts, ...(dailyPost ? [dailyPost] : [])].flatMap((p) => p.captions.map((c) => c.id));
+  const myVotes = user ? await getMyVotes(allCaptionIds) : new Map();
   const totalPages = Math.max(1, Math.ceil(total / FEED_PAGE_SIZE));
 
   return (
@@ -78,9 +80,20 @@ export default async function BattlePage(props: PageProps<"/battle">) {
             everyone else&apos;s. The theme is just an idea; any photo works.
           </p>
         </div>
-        <Link href={user ? "/battle/new" : "/login"} className="btn btn-primary">
-          {user ? "Caption a photo" : "Sign in to play"}
-        </Link>
+        {user ? (
+          <div className={styles.heroActions}>
+            <Link href="/battle/vote" className="btn btn-primary">
+              ⚡ Quick Vote
+            </Link>
+            <Link href="/battle/new" className="btn btn-secondary">
+              📸 Post a photo
+            </Link>
+          </div>
+        ) : (
+          <Link href="/login" className="btn btn-primary">
+            Sign in to play
+          </Link>
+        )}
       </header>
 
       <ol className={styles.howItWorks} aria-label="How it works">
@@ -130,6 +143,7 @@ export default async function BattlePage(props: PageProps<"/battle">) {
           error={Boolean(error)}
           myVotes={myVotes}
           theme={daily.theme}
+          dailyPost={dailyPost}
         />
       )}
     </main>
@@ -144,12 +158,29 @@ type MemberFeedProps = {
   error: boolean;
   myVotes: Map<string, 1 | -1>;
   theme: string;
+  dailyPost: Post | null;
 };
 
 /** The full board: every post, every caption, and voting. Members only. */
-function MemberFeed({ sort, page, totalPages, posts, error, myVotes, theme }: MemberFeedProps) {
+function MemberFeed({ sort, page, totalPages, posts, error, myVotes, theme, dailyPost }: MemberFeedProps) {
+  const feed = dailyPost ? posts.filter((p) => p.id !== dailyPost.id) : posts;
   return (
     <>
+      {dailyPost && (
+        <section className={styles.dailyPin} aria-labelledby="daily-title">
+          <div className={styles.dailyPinHead}>
+            <h2 id="daily-title" className={styles.previewTitle}>
+              🤖 Today&apos;s AI photo
+            </h2>
+            <p>The AI found a photo for today&apos;s theme and wrote the captions. You decide which one wins.</p>
+            <Link href="/battle/vote" className="btn btn-primary btn-sm">
+              ⚡ Judge it in Quick Vote
+            </Link>
+          </div>
+          <PostCard post={dailyPost} myVotes={myVotes} priority />
+        </section>
+      )}
+
       <nav className={styles.tabs} aria-label="Sort posts">
         {TABS.map((tab) => (
           <Link
@@ -169,7 +200,7 @@ function MemberFeed({ sort, page, totalPages, posts, error, myVotes, theme }: Me
           <p className={styles.emptyTitle}>The mic cut out.</p>
           <p>We couldn&apos;t load the battle right now. Please refresh in a moment.</p>
         </div>
-      ) : posts.length === 0 ? (
+      ) : feed.length === 0 ? (
         <div className={styles.empty}>
           <Mascot mood="sleepy" size={72} />
           <p className={styles.emptyTitle}>{sort === "today" ? "Nobody's on stage yet." : "Tough crowd."}</p>
@@ -185,7 +216,7 @@ function MemberFeed({ sort, page, totalPages, posts, error, myVotes, theme }: Me
       ) : (
         <>
           <div className={styles.feed}>
-            {posts.map((post, i) => (
+            {feed.map((post, i) => (
               <PostCard key={post.id} post={post} myVotes={myVotes} priority={i < 2} />
             ))}
           </div>

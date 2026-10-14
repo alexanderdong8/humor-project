@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import pg from "pg";
 import { newYorkDate, themeForDate } from "@/lib/battle";
+import { generateDailyPost } from "@/lib/daily-post";
 import { createClient } from "@/lib/supabase/server";
 
 export type DailyTheme = {
@@ -229,7 +230,9 @@ export const getDailyTheme = cache(async (): Promise<DailyTheme> => {
 
   if (process.env.THEME_WRITER_DB_URL && !pending) {
     after(async () => {
-      pending ??= generateDailyTheme(day).catch((error) => console.error("[daily-theme] generation failed", error));
+      pending ??= generateDailyTheme(day)
+        .then((theme) => theme && generateDailyPost(day, theme))
+        .catch((error) => console.error("[daily-theme] generation failed", error));
       await pending;
       pending = null;
     });
