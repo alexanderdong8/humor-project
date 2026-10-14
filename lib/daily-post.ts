@@ -95,6 +95,73 @@ function voiceForDay(day: string): VoiceId {
   return voices[Math.floor(Date.parse(`${day}T00:00:00Z`) / 86_400_000) % voices.length];
 }
 
+/**
+ * Finds, picks, and captions today's photo without saving anything. Used by
+ * generateDailyPost, and on its own for the cron job's dry run.
+ */
+export async function buildDailyPost(day: string, theme: Pick<DailyTheme, "theme" | "idea">) {
+  // 1. Search ideas for the theme.
+  const { data: search } = await askJson<{ queries?: string[] }>(
+    `Today's theme: "${theme.theme}". ${theme.idea ?? ""}`,
+    SEARCH_PROMPT,
+    { type: "object", properties: { queries: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 4 } }, required: ["queries"] },
+  );
+  const queries = (search.queries ?? []).map((q) => q.trim()).filter(Boolean).slice(0, 4);
+  if (queries.length === 0) queries.push(theme.theme);
+
+  // 2. Openly licensed candidates from Flickr and Wikimedia Commons.
+  const results = (await Promise.all(queries.map((q) => searchOpenverse(q).catch(() => [])))).flat();
+  const unique = [...new Map(results.map((r) => [r.id, r])).values()].slice(0, 12);
+
+  // 3. Thumbnails, so the model can look at the options.
+  const thumbs = await Promise.all(
+    unique.map(async (photo) => {
+      try {
+        return { photo, image: await fetchImage(photo.thumbnail, 1.5 * 1024 * 1024) };
+      } catch {
+        return null;
+      }
+    }),
+  );
+  const candidates = thumbs.filter((t): t is { photo: OpenverseImage; image: CaptionImage } => t !== null).slice(0, 10);
+  if (candidates.length === 0) {
+    console.error("[daily-post] no usable photos for", queries);
+    return null;
+  }
+
+  // 4. Let the model pick the funniest safe photo.
+  const parts = candidates.flatMap((c, i) => [
+    { text: `Photo ${i + 1}:` },
+    { inlineData: { mimeType: c.image.mediaType, data: c.image.data } },
+  ]);
+  const { data: pick, model: pickModel } = await askJson<{ ranking?: number[] }>(
+    [{ role: "user", parts: [{ text: `Today's theme: "${theme.theme}".` }, ...parts] }],
+    PICK_PROMPT,
+    { type: "object", properties: { ranking: { type: "array", items: { type: "integer" } } }, required: ["ranking"] },
+  );
+  const ranked = (pick.ranking ?? [])
+    .map((n) => candidates[n - 1])
+    .filter((c): c is (typeof candidates)[number] => Boolean(c));
+  const chosen = ranked[0];
+  if (!chosen) {
+    console.error("[daily-post] the model found no suitable photo among", candidates.length);
+    return null;
+  }
+
+  // 5. Captions for the chosen photo (the thumbnail is plenty for the model).
+  const voice = voiceForDay(day);
+  const result = await writeCaptions({ image: chosen.image, voice, theme: theme.theme });
+  const prompt = [
+    result.prompt,
+    "",
+    "[photo selection]",
+    `Search queries: ${queries.join(", ")}`,
+    `Picked Openverse image ${chosen.photo.id} from ${candidates.length} candidates (${pickModel}).`,
+  ].join("\n");
+
+  return { photo: chosen.photo, voice, captions: result.captions, model: result.model, prompt, queries };
+}
+
 /** Creates today's AI photo post if it doesn't exist yet. Returns its id, or null if no photo worked. */
 export async function generateDailyPost(day: string, theme: Pick<DailyTheme, "theme" | "idea">) {
   const url = process.env.THEME_WRITER_DB_URL;
@@ -106,66 +173,11 @@ export async function generateDailyPost(day: string, theme: Pick<DailyTheme, "th
     const existing = await client.query("select id from public.generations where daily_for = $1", [day]);
     if (existing.rows[0]) return existing.rows[0].id as string;
 
-    // 1. Search ideas for the theme.
-    const { data: search } = await askJson<{ queries?: string[] }>(
-      `Today's theme: "${theme.theme}". ${theme.idea ?? ""}`,
-      SEARCH_PROMPT,
-      { type: "object", properties: { queries: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 4 } }, required: ["queries"] },
-    );
-    const queries = (search.queries ?? []).map((q) => q.trim()).filter(Boolean).slice(0, 4);
-    if (queries.length === 0) queries.push(theme.theme);
+    const built = await buildDailyPost(day, theme);
+    if (!built) return null;
+    const { photo, voice, captions, model, prompt } = built;
 
-    // 2. Openly licensed candidates from Flickr and Wikimedia Commons.
-    const results = (await Promise.all(queries.map((q) => searchOpenverse(q).catch(() => [])))).flat();
-    const unique = [...new Map(results.map((r) => [r.id, r])).values()].slice(0, 12);
-
-    // 3. Thumbnails, so the model can look at the options.
-    const thumbs = await Promise.all(
-      unique.map(async (photo) => {
-        try {
-          return { photo, image: await fetchImage(photo.thumbnail, 1.5 * 1024 * 1024) };
-        } catch {
-          return null;
-        }
-      }),
-    );
-    const candidates = thumbs.filter((t): t is { photo: OpenverseImage; image: CaptionImage } => t !== null).slice(0, 10);
-    if (candidates.length === 0) {
-      console.error("[daily-post] no usable photos for", queries);
-      return null;
-    }
-
-    // 4. Let the model pick the funniest safe photo.
-    const parts = candidates.flatMap((c, i) => [
-      { text: `Photo ${i + 1}:` },
-      { inlineData: { mimeType: c.image.mediaType, data: c.image.data } },
-    ]);
-    const { data: pick, model: pickModel } = await askJson<{ ranking?: number[] }>(
-      [{ role: "user", parts: [{ text: `Today's theme: "${theme.theme}".` }, ...parts] }],
-      PICK_PROMPT,
-      { type: "object", properties: { ranking: { type: "array", items: { type: "integer" } } }, required: ["ranking"] },
-    );
-    const ranked = (pick.ranking ?? [])
-      .map((n) => candidates[n - 1])
-      .filter((c): c is (typeof candidates)[number] => Boolean(c));
-    const chosen = ranked[0];
-    if (!chosen) {
-      console.error("[daily-post] the model found no suitable photo among", candidates.length);
-      return null;
-    }
-
-    // 5. Captions for the chosen photo (the thumbnail is plenty for the model).
-    const voice = voiceForDay(day);
-    const result = await writeCaptions({ image: chosen.image, voice, theme: theme.theme });
-    const prompt = [
-      result.prompt,
-      "",
-      "[photo selection]",
-      `Search queries: ${queries.join(", ")}`,
-      `Picked Openverse image ${chosen.photo.id} from ${candidates.length} candidates (${pickModel}).`,
-    ].join("\n");
-
-    // 6. Save the post and its captions as one transaction.
+    // Save the post and its captions as one transaction.
     await client.query("begin");
     try {
       const { rows } = await client.query(
@@ -175,18 +187,18 @@ export async function generateDailyPost(day: string, theme: Pick<DailyTheme, "th
          returning id`,
         [
           day,
-          `openverse:${chosen.photo.id}`,
-          chosen.photo.url,
+          `openverse:${photo.id}`,
+          photo.url,
           theme.theme,
           voice,
           prompt,
-          result.model,
-          credit(chosen.photo),
-          chosen.photo.foreign_landing_url,
+          model,
+          credit(photo),
+          photo.foreign_landing_url,
         ],
       );
       const postId = rows[0].id as string;
-      for (const [i, text] of result.captions.entries()) {
+      for (const [i, text] of captions.entries()) {
         await client.query("insert into public.captions (generation_id, position, text) values ($1, $2, $3)", [
           postId,
           i + 1,

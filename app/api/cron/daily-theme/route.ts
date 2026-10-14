@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { generateDailyPost } from "@/lib/daily-post";
+import { buildDailyPost, generateDailyPost } from "@/lib/daily-post";
 import { generateDailyTheme } from "@/lib/daily-theme";
 
 // Trends, a photo search, and a few model calls can take a little while.
@@ -22,7 +22,16 @@ export async function GET(request: NextRequest) {
   const dryRun = params.get("dry") === "1";
   try {
     const theme = await generateDailyTheme(undefined, { replace, dryRun });
-    if (dryRun || !theme) return NextResponse.json({ ok: Boolean(theme), theme });
+    if (!theme) return NextResponse.json({ ok: false, theme });
+    if (dryRun) {
+      // Also find, pick, and caption a photo, but save nothing.
+      const post = await buildDailyPost(theme.day, theme).catch((error) => ({ error: String(error) }));
+      const summary =
+        post && "photo" in post
+          ? { photo: post.photo.url, credit: post.photo.title, queries: post.queries, captions: post.captions, model: post.model }
+          : post;
+      return NextResponse.json({ ok: true, theme, dailyPost: summary });
+    }
 
     const postId = await generateDailyPost(theme.day, theme).catch((error) => {
       console.error("[cron/daily-theme] daily post failed", error);
