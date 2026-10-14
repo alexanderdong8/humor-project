@@ -2,8 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { buildDailyPost, generateDailyPost } from "@/lib/daily-post";
 import { generateDailyTheme } from "@/lib/daily-theme";
 
-// Trends, a photo search, and a few model calls can take a little while.
-export const maxDuration = 60;
+// Trends, a photo search, and several model calls (with fallbacks when Gemini is
+// busy) can take over a minute; 300s is the Hobby plan maximum.
+export const maxDuration = 300;
 
 /**
  * Called by Vercel Cron just after midnight Eastern (see vercel.json) to set
