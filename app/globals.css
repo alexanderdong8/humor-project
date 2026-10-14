@@ -1,34 +1,49 @@
 /*
- * Punchline design tokens. The look is a late-night comedy club: warm ink
- * black, cream type, and a single amber spotlight accent. Dark by design.
+ * Punchline design tokens: a friendly "sticker book" look borrowed from party
+ * games like Quiplash and Gartic Phone. Warm paper background, white cards
+ * with ink outlines and hard offset shadows, and a handful of bright accents.
  */
 :root {
-  --ink: #0e0c0a;
-  --ink-2: #16130f;
-  --ink-3: #1f1b15;
-  --line: rgba(243, 236, 224, 0.09);
-  --line-strong: rgba(243, 236, 224, 0.18);
-  --cream: #f3ece0;
-  --muted: #a99f8f;
-  --faint: #756c5f;
-  --amber: #f2b33d;
-  --amber-hover: #f7c768;
-  --amber-soft: rgba(242, 179, 61, 0.12);
-  --on-air: #e5533d;
-  --success: #86cf9f;
-  --danger: #f08a78;
+  --bg: #fff7e8;
+  --surface: #ffffff;
+  --ink: #1f1b16;
+  --muted: #5b5348;
+  --faint: #8a8070;
+  --soft-line: rgba(31, 27, 22, 0.14);
 
-  --font-display: var(--font-fraunces), Georgia, serif;
-  --font-body: var(--font-geist-sans), "Helvetica Neue", sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --sun: #ffd23f;
+  --sun-soft: #fff1b8;
+  --tomato: #ff6b4a;
+  --tomato-soft: #ffe2da;
+  --sky: #6cc4ff;
+  --sky-soft: #ddf1ff;
+  --mint: #3fd09a;
+  --mint-soft: #d8f6e9;
+  --grape: #a98bff;
+  --grape-soft: #ece6ff;
+  --pink: #ff9ccf;
+  --pink-soft: #ffe4f2;
 
-  --radius: 14px;
-  --radius-lg: 22px;
-  --page-width: 1120px;
+  --success: #127a4f;
+  --danger: #c4361b;
+
+  --border: 2.5px solid var(--ink);
+  --shadow-sm: 2px 2px 0 var(--ink);
+  --shadow: 4px 4px 0 var(--ink);
+  --shadow-lg: 6px 6px 0 var(--ink);
+
+  --font-display: var(--font-fredoka), "Arial Rounded MT Bold", sans-serif;
+  --font-body: var(--font-figtree), "Helvetica Neue", sans-serif;
+
+  --radius-sm: 10px;
+  --radius: 18px;
+  --radius-lg: 26px;
+  --page-width: 1140px;
   --gutter: clamp(1rem, 4vw, 2.5rem);
-  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *,
@@ -50,27 +65,15 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  color: var(--cream);
-  background:
-    radial-gradient(ellipse 70% 55% at 50% -12%, rgba(242, 179, 61, 0.13), transparent 70%),
-    var(--ink);
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image: radial-gradient(rgba(31, 27, 22, 0.09) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
   font-family: var(--font-body);
   font-size: 1rem;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-/* Fine film grain over everything, like stage haze. */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  pointer-events: none;
-  opacity: 0.045;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 main {
@@ -97,14 +100,76 @@ svg {
 }
 
 ::selection {
-  background: var(--amber);
+  background: var(--sun);
   color: var(--ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--amber);
+  outline: 3px solid var(--sky);
   outline-offset: 3px;
-  border-radius: 6px;
+  border-radius: 8px;
+}
+
+/* Buttons: chunky stickers that press in when you click them. */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 50px;
+  padding: 0 1.4rem;
+  border: var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+}
+
+.btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary {
+  background: var(--sun);
+}
+
+.btn-secondary {
+  background: var(--surface);
+}
+
+.btn-danger {
+  background: var(--tomato-soft);
+  color: var(--danger);
+}
+
+.btn-sm {
+  height: 38px;
+  padding: 0 1rem;
+  font-size: 0.92rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-sm:hover {
+  box-shadow: var(--shadow);
 }
 
 .skip-link {
@@ -113,14 +178,31 @@ svg {
   left: 1rem;
   z-index: 200;
   padding: 0.6rem 1rem;
-  border-radius: 8px;
-  background: var(--amber);
-  color: var(--ink);
-  font-weight: 600;
+  border: var(--border);
+  border-radius: 10px;
+  background: var(--sun);
+  font-weight: 700;
 }
 
 .skip-link:focus {
   top: 1rem;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+}
+
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

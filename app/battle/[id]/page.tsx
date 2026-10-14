@@ -74,7 +74,7 @@ export default async function PostPage(props: PageProps<"/battle/[id]">) {
             <ShareButton />
             {isOwner && (
               <form action={deletePost.bind(null, post.id)}>
-                <button type="submit" className={styles.danger}>
+                <button type="submit" className="btn btn-danger">
                   Delete post
                 </button>
               </form>
@@ -111,7 +111,7 @@ function SignedOutPost({ preview }: { preview: NonNullable<Awaited<ReturnType<ty
           {preview.top_caption && (
             <div className={styles.caption} data-winner={preview.top_score > 0 || undefined}>
               <div className={styles.captionText}>
-                {preview.top_score > 0 && <span className={styles.crown}>Crowd favorite</span>}
+                {preview.top_score > 0 && <span className={styles.crown}>👑 Crowd favorite</span>}
                 <p>{preview.top_caption}</p>
               </div>
             </div>
@@ -119,7 +119,7 @@ function SignedOutPost({ preview }: { preview: NonNullable<Awaited<ReturnType<ty
           <LockedCaptions count={Math.max(1, preview.caption_count - 1)} />
 
           <div className={styles.detailActions}>
-            <Link href="/login" className={styles.primary}>
+            <Link href="/login" className="btn btn-primary">
               Sign in to see all captions and vote
             </Link>
             <ShareButton />

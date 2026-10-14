@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession, isProfileComplete } from "@/lib/auth";
+import { Mascot } from "@/components/mascot";
 import styles from "@/components/account.module.css";
 import { GoogleButton } from "./google-button";
 
@@ -18,7 +19,8 @@ export default async function LoginPage(props: PageProps<"/login">) {
   return (
     <main id="main" className={styles.page}>
       <section className={`${styles.panel} ${styles.narrow} ${styles.card} ${styles.centered}`}>
-        <p className={styles.kicker}>Members only</p>
+        <Mascot mood="happy" size={84} className={styles.mascot} />
+        <p className={styles.kicker}>🎤 Members only</p>
         <h1 className={styles.title}>
           Welcome to the <em>Green Room.</em>
         </h1>

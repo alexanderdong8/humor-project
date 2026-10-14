@@ -12,6 +12,22 @@ export type JokeCategory = { category: string; joke_count: number };
 
 export const JOKE_COLUMNS = "id, setup, punchline, category, created_at";
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  Animals: "🐶",
+  Food: "🍕",
+  Nature: "🌿",
+  Puns: "🤓",
+  School: "📚",
+  Science: "🧪",
+  Space: "🚀",
+  Tech: "💻",
+};
+
+/** A friendly emoji for a joke category, with a grin for anything new. */
+export function categoryEmoji(category: string | null) {
+  return (category && CATEGORY_EMOJI[category]) || "😄";
+}
+
 /** Categories with their joke counts, alphabetized (from the joke_categories view). */
 export async function getJokeCategoryCounts(): Promise<JokeCategory[]> {
   const supabase = await createClient();

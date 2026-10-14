@@ -17,7 +17,7 @@ export default async function ProfilePage() {
   return (
     <main id="main" className={styles.page}>
       <section className={styles.panel}>
-        <p className={styles.kicker}>Account</p>
+        <p className={styles.kicker}>🙂 Your account</p>
         <h1 className={styles.title}>Your profile</h1>
         <p className={styles.lede}>
           Signed in with Google as <strong>{user.email}</strong>.

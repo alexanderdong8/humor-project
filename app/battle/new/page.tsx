@@ -5,6 +5,7 @@ import { isProfileComplete, requireUser } from "@/lib/auth";
 import { DAILY_POST_LIMIT, VOICES } from "@/lib/battle";
 import { getDailyTheme } from "@/lib/daily-theme";
 import { createClient } from "@/lib/supabase/server";
+import { Mascot } from "@/components/mascot";
 import { NewPostForm } from "./new-post-form";
 import styles from "../battle.module.css";
 
@@ -25,6 +26,7 @@ export default async function NewPostPage() {
   const voices = Object.entries(VOICES).map(([id, v]) => ({
     id,
     label: v.label,
+    emoji: v.emoji,
     blurb: v.blurb,
     example: v.example,
   }));
@@ -35,7 +37,7 @@ export default async function NewPostPage() {
         ← Back to the battle
       </Link>
       <section className={styles.composer}>
-        <p className={styles.kicker}>New post</p>
+        <p className={styles.kicker}>📸 New post</p>
         <h1 className={styles.composerTitle}>
           Give us a photo. <em>We&apos;ll write the jokes.</em>
         </h1>
@@ -47,9 +49,10 @@ export default async function NewPostPage() {
 
         {remaining === 0 ? (
           <div className={styles.empty}>
+            <Mascot mood="sleepy" size={72} />
             <p className={styles.emptyTitle}>That&apos;s a wrap for today.</p>
             <p>You&apos;ve posted {DAILY_POST_LIMIT} times today. Go vote on everyone else&apos;s, then come back tomorrow.</p>
-            <Link href="/battle" className={styles.secondary}>
+            <Link href="/battle" className="btn btn-secondary">
               Vote on today&apos;s posts
             </Link>
           </div>

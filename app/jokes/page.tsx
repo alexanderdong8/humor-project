@@ -3,7 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { JokeCard } from "@/components/joke-card";
 import { getSession } from "@/lib/auth";
-import { getJokeCategoryCounts, JOKE_COLUMNS, type Joke } from "@/lib/jokes";
+import { Mascot } from "@/components/mascot";
+import { categoryEmoji, getJokeCategoryCounts, JOKE_COLUMNS, type Joke } from "@/lib/jokes";
 import { createClient } from "@/lib/supabase/server";
 import styles from "./jokes.module.css";
 
@@ -58,15 +59,23 @@ export default async function JokesPage(props: PageProps<"/jokes">) {
   return (
     <main id="main" className={styles.main}>
       <header className={styles.header}>
-        <p className={styles.kicker}>The Library</p>
-        <h1 className={styles.title}>{category ? <>{category} jokes</> : <>Every joke we&apos;ve got.</>}</h1>
+        <p className={styles.kicker}>📚 The joke library</p>
+        <h1 className={styles.title}>
+          {category ? (
+            <>
+              {categoryEmoji(category)} {category} jokes
+            </>
+          ) : (
+            <>Every joke we&apos;ve got.</>
+          )}
+        </h1>
         <p className={styles.lede}>Read the setup, take a beat, then tap the card for the punchline.</p>
       </header>
 
       {categories.length > 0 && (
         <nav className={styles.filters} aria-label="Filter by category">
           <Link href="/jokes" className={styles.chip} aria-current={category ? undefined : "page"}>
-            All <span>{allCount}</span>
+            😄 All <span>{allCount}</span>
           </Link>
           {categories.map((c) => (
             <Link
@@ -75,7 +84,7 @@ export default async function JokesPage(props: PageProps<"/jokes">) {
               className={styles.chip}
               aria-current={c.category === category ? "page" : undefined}
             >
-              {c.category} <span>{c.joke_count}</span>
+              {categoryEmoji(c.category)} {c.category} <span>{c.joke_count}</span>
             </Link>
           ))}
         </nav>
@@ -83,11 +92,13 @@ export default async function JokesPage(props: PageProps<"/jokes">) {
 
       {error ? (
         <div className={styles.empty} role="alert">
+          <Mascot mood="sad" size={72} />
           <p className={styles.emptyTitle}>The mic cut out.</p>
           <p>We couldn&apos;t load jokes right now. Please refresh in a moment.</p>
         </div>
       ) : jokes.length === 0 ? (
         <div className={styles.empty}>
+          <Mascot mood="sleepy" size={72} />
           <p className={styles.emptyTitle}>Tough crowd.</p>
           <p>There are no jokes here yet.</p>
         </div>
@@ -106,13 +117,14 @@ export default async function JokesPage(props: PageProps<"/jokes">) {
 
           {!user && totalPages > 1 && (
             <div className={styles.wall}>
-              <div>
+              <Mascot mood="wow" size={64} />
+              <div className={styles.wallCopy}>
                 <p className={styles.wallTitle}>
                   You&apos;re seeing {jokes.length} of {total} jokes.
                 </p>
                 <p>Sign in to unlock the whole library, the Green Room, and Caption Battle voting.</p>
               </div>
-              <Link href="/login" className={styles.wallCta}>
+              <Link href="/login" className="btn btn-primary">
                 Sign in with Google
               </Link>
             </div>

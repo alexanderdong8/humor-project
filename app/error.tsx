@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { Mascot } from "@/components/mascot";
 import styles from "@/components/status.module.css";
 
 export default function Error({
@@ -18,6 +19,7 @@ export default function Error({
   return (
     <main id="main" className={styles.wrap}>
       <div>
+        <Mascot mood="sad" size={110} className={styles.mascot} />
         <p className={styles.code}>Something went wrong</p>
         <h1 className={styles.title}>
           The mic <em>cut out.</em>
@@ -27,10 +29,10 @@ export default function Error({
           few minutes.
         </p>
         <div className={styles.actions}>
-          <button type="button" className={styles.primary} onClick={() => retry()}>
+          <button type="button" className="btn btn-primary" onClick={() => retry()}>
             Try again
           </button>
-          <Link href="/" className={styles.secondary}>
+          <Link href="/" className="btn btn-secondary">
             Back to home
           </Link>
         </div>

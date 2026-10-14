@@ -15,9 +15,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const replace = request.nextUrl.searchParams.get("replace") === "1";
+  const params = request.nextUrl.searchParams;
+  const replace = params.get("replace") === "1";
+  // ?dry=1 fetches trends and picks a theme without saving, for checking the pipeline.
+  const dryRun = params.get("dry") === "1";
   try {
-    const theme = await generateDailyTheme(undefined, { replace });
+    const theme = await generateDailyTheme(undefined, { replace, dryRun });
     return NextResponse.json({ ok: true, theme });
   } catch (error) {
     console.error("[cron/daily-theme] failed", error);

@@ -11,6 +11,7 @@ import {
   type Post,
 } from "@/lib/battle";
 import { getDailyTheme } from "@/lib/daily-theme";
+import { Mascot } from "@/components/mascot";
 import { PostCard } from "./post-card";
 import { MembersWall, PreviewCard } from "./preview";
 import styles from "./battle.module.css";
@@ -22,9 +23,9 @@ export const metadata: Metadata = {
 };
 
 const TABS: { sort: FeedSort; label: string }[] = [
-  { sort: "today", label: "Today's top" },
-  { sort: "new", label: "New" },
-  { sort: "top", label: "All-time" },
+  { sort: "today", label: "🔥 Today's top" },
+  { sort: "new", label: "✨ New" },
+  { sort: "top", label: "🏆 All-time" },
 ];
 
 function first(value: string | string[] | undefined) {
@@ -50,7 +51,8 @@ export default async function BattlePage(props: PageProps<"/battle">) {
 
   // Signed-out visitors can't read the board (RLS); they get a 3-post preview instead.
   let previews = user ? [] : await getPreview({ since: startOfNewYorkDay() });
-  if (!user && previews.length === 0) previews = await getPreview();
+  const previewIsToday = previews.length > 0;
+  if (!user && !previewIsToday) previews = await getPreview();
 
   const { posts, total, error } = user
     ? await getFeed(sort, page)
@@ -62,13 +64,13 @@ export default async function BattlePage(props: PageProps<"/battle">) {
     <main id="main" className={styles.main}>
       <header className={styles.hero}>
         <div>
-          <p className={styles.kicker}>Caption Battle · Today&apos;s theme</p>
+          <p className={styles.kicker}>⚔️ Caption Battle · Today&apos;s theme</p>
           <h1 className={styles.title}>
             <em>{daily.theme}</em>
           </h1>
           {daily.trend && (
             <p className={styles.trendNote}>
-              Inspired by <strong>{daily.trend}</strong>, trending on X in New York today
+              📈 Inspired by <strong>{daily.trend}</strong>, trending on X in New York today
             </p>
           )}
           <p className={styles.lede}>
@@ -76,21 +78,24 @@ export default async function BattlePage(props: PageProps<"/battle">) {
             everyone else&apos;s. The theme is just an idea; any photo works.
           </p>
         </div>
-        <Link href={user ? "/battle/new" : "/login"} className={styles.primary}>
+        <Link href={user ? "/battle/new" : "/login"} className="btn btn-primary">
           {user ? "Caption a photo" : "Sign in to play"}
         </Link>
       </header>
 
       <ol className={styles.howItWorks} aria-label="How it works">
         <li>
+          <span className={styles.howEmoji}>📸</span>
           <strong>Post a photo</strong>
           <span>Anything that made you laugh: a subway moment, your dorm, a bodega cat.</span>
         </li>
         <li>
+          <span className={styles.howEmoji}>🤖</span>
           <strong>AI writes 4 captions</strong>
           <span>Pick a style like Sarcastic or Wholesome, and get four different jokes in seconds.</span>
         </li>
         <li>
+          <span className={styles.howEmoji}>😂</span>
           <strong>Everyone votes</strong>
           <span>The funniest caption rises to the top. Today&apos;s board resets at midnight.</span>
         </li>
@@ -98,7 +103,9 @@ export default async function BattlePage(props: PageProps<"/battle">) {
 
       {!user ? (
         <>
-          <h2 className={styles.previewTitle}>Today&apos;s highlights</h2>
+          <h2 className={styles.previewTitle}>
+            {previewIsToday ? "🔥 Today's highlights" : "🏆 Top posts so far"}
+          </h2>
           {previews.length > 0 ? (
             <div className={styles.previewGrid}>
               {previews.map((post, i) => (
@@ -107,6 +114,7 @@ export default async function BattlePage(props: PageProps<"/battle">) {
             </div>
           ) : (
             <div className={styles.empty}>
+              <Mascot mood="sleepy" size={72} />
               <p className={styles.emptyTitle}>Nobody&apos;s on stage yet.</p>
               <p>Sign in and be the first to post today.</p>
             </div>
@@ -157,18 +165,20 @@ function MemberFeed({ sort, page, totalPages, posts, error, myVotes, theme }: Me
 
       {error ? (
         <div className={styles.empty} role="alert">
+          <Mascot mood="sad" size={72} />
           <p className={styles.emptyTitle}>The mic cut out.</p>
           <p>We couldn&apos;t load the battle right now. Please refresh in a moment.</p>
         </div>
       ) : posts.length === 0 ? (
         <div className={styles.empty}>
+          <Mascot mood="sleepy" size={72} />
           <p className={styles.emptyTitle}>{sort === "today" ? "Nobody's on stage yet." : "Tough crowd."}</p>
           <p>
             {sort === "today"
               ? `Be the first to caption “${theme}” today.`
               : "No posts yet. Be the first to start the battle."}
           </p>
-          <Link href="/battle/new" className={styles.secondary}>
+          <Link href="/battle/new" className="btn btn-secondary">
             Caption a photo
           </Link>
         </div>

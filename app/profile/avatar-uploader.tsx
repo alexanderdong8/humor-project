@@ -91,7 +91,7 @@ export function AvatarUploader({ userId, name, avatarUrl }: Props) {
         />
         <button
           type="button"
-          className={styles.secondary}
+          className="btn btn-secondary"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
         >

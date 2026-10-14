@@ -23,7 +23,7 @@ export function ShareButton() {
   }
 
   return (
-    <button type="button" className={styles.secondary} onClick={share}>
+    <button type="button" className="btn btn-secondary" onClick={share}>
       {copied ? "Link copied" : "Share"}
     </button>
   );

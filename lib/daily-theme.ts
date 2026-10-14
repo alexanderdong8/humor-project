@@ -125,32 +125,41 @@ async function chooseTheme(trends: string[]) {
  * Trends if X trends can't be fetched, and to the built-in rotation if no
  * trend is safe to use, so there is always exactly one theme per day.
  */
-export async function generateDailyTheme(day = newYorkDate(), { replace = false } = {}) {
+export async function generateDailyTheme(day = newYorkDate(), { replace = false, dryRun = false } = {}) {
   const url = process.env.THEME_WRITER_DB_URL;
   if (!url) throw new Error("THEME_WRITER_DB_URL is not set");
 
   const client = new pg.Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
   await client.connect();
   try {
-    if (!replace) {
+    if (!replace && !dryRun) {
       const existing = await client.query(
         "select day::text, theme, idea, trend, source from public.daily_themes where day = $1",
         [day],
       );
       if (existing.rows[0]) return existing.rows[0] as DailyTheme;
     }
-    return await buildAndSaveTheme(client, day, replace);
+    return await buildAndSaveTheme(client, day, replace, dryRun);
   } finally {
     await client.end();
   }
 }
 
-async function buildAndSaveTheme(client: pg.Client, day: string, replace: boolean): Promise<DailyTheme | null> {
+type ThemeResult = DailyTheme & { trends?: string[]; xError?: string };
+
+async function buildAndSaveTheme(
+  client: pg.Client,
+  day: string,
+  replace: boolean,
+  dryRun: boolean,
+): Promise<ThemeResult | null> {
   let source: DailyTheme["source"] = "x";
   let trends: string[] = [];
+  let xError: string | undefined;
   try {
     trends = await fetchXTrends();
   } catch (error) {
+    xError = String(error);
     console.error("[daily-theme] X trends unavailable, trying Google Trends", error);
   }
   if (trends.length === 0) {
@@ -162,6 +171,11 @@ async function buildAndSaveTheme(client: pg.Client, day: string, replace: boolea
   const row = picked
     ? { day, theme: picked.theme, idea: picked.idea, trend: picked.trend, source, trends, prompt: picked.prompt, model: picked.model }
     : { day, theme: themeForDate(day), idea: null, trend: null, source: "fallback" as const, trends, prompt: null, model: null };
+
+  // Dry run: report what would be saved (and why X failed, if it did) without writing.
+  if (dryRun) {
+    return { day, theme: row.theme, idea: row.idea, trend: row.trend, source: row.source, trends: trends.slice(0, 15), xError };
+  }
 
   const { rows } = await client.query(
     `insert into public.daily_themes (day, theme, idea, trend, source, trends, prompt, model)

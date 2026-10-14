@@ -33,7 +33,9 @@ export function PostMeta({ post }: { post: Post }) {
       <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
       <span className={styles.chips}>
         {post.theme && <span className={styles.chip}>{post.theme}</span>}
-        <span className={styles.chip}>{VOICES[post.voice]?.label ?? post.voice}</span>
+        <span className={styles.chip}>
+          {VOICES[post.voice] ? `${VOICES[post.voice].emoji} ${VOICES[post.voice].label}` : post.voice}
+        </span>
       </span>
     </div>
   );
@@ -47,7 +49,7 @@ export function CaptionList({ post, myVotes }: Omit<Props, "priority">) {
       {post.captions.map((caption) => (
         <li key={caption.id} className={styles.caption} data-winner={(best > 0 && caption.score === best) || undefined}>
           <div className={styles.captionText}>
-            {best > 0 && caption.score === best && <span className={styles.crown}>Crowd favorite</span>}
+            {best > 0 && caption.score === best && <span className={styles.crown}>👑 Crowd favorite</span>}
             <p>{caption.text}</p>
           </div>
           <VoteButtons

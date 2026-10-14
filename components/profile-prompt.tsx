@@ -10,7 +10,7 @@ export function ProfilePrompt() {
 
   return (
     <p className={styles.prompt} role="status">
-      <span>Your profile is missing a name.</span>
+      <span>👋 Almost there! Your profile is missing a name.</span>
       <Link href="/onboarding">Finish setting up</Link>
     </p>
   );

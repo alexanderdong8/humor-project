@@ -11,14 +11,6 @@ type Props = {
   myVote: 1 | -1 | 0;
 };
 
-function Arrow({ down = false }: { down?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style={down ? { rotate: "180deg" } : undefined}>
-      <path d="M12 5 4.5 14h5v5h5v-5h5L12 5Z" fill="currentColor" />
-    </svg>
-  );
-}
-
 /**
  * Up/down voting with an instant (optimistic) update that settles on the
  * server's tally. Only rendered for signed-in members; the server action and
@@ -60,10 +52,11 @@ export function VoteButtons({ captionId, upvotes, downvotes, myVote }: Props) {
         className={styles.voteButton}
         data-active={state.myVote === 1 || undefined}
         aria-pressed={state.myVote === 1}
-        aria-label="Upvote"
+        aria-label="Funny (upvote)"
+        title="Funny"
         onClick={() => vote(1)}
       >
-        <Arrow />
+        <span aria-hidden="true">😂</span>
       </button>
       <span className={styles.score} aria-live="polite" aria-label={`Score ${score}`}>
         {score}
@@ -74,10 +67,11 @@ export function VoteButtons({ captionId, upvotes, downvotes, myVote }: Props) {
         data-active={state.myVote === -1 || undefined}
         data-down
         aria-pressed={state.myVote === -1}
-        aria-label="Downvote"
+        aria-label="Meh (downvote)"
+        title="Meh"
         onClick={() => vote(-1)}
       >
-        <Arrow down />
+        <span aria-hidden="true">🙄</span>
       </button>
       {error && (
         <span className={styles.voteError} role="alert">

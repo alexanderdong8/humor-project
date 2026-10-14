@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
  */
 export const VOICES = {
   groupchat: {
+    emoji: "💬",
     label: "Group chat",
     blurb: "Casual and lowercase, like texting your friends.",
     example: "not the pigeon commuting better than me",
@@ -13,6 +14,7 @@ export const VOICES = {
       "Casual Gen Z group-chat energy. Mostly lowercase, internet slang used naturally (not in every line), reads like a viral post caption. At most one emoji across all four captions.",
   },
   sarcastic: {
+    emoji: "🙄",
     label: "Sarcastic",
     blurb: "Dry and unimpressed, like a tired New Yorker.",
     example: "Ah yes, another “quick” ride on the 1 train.",
@@ -20,6 +22,7 @@ export const VOICES = {
       "Dry, sarcastic, and unimpressed, like a lifelong New Yorker who has seen it all. Understated, a little put-upon; rent, the MTA, tourists, and slow walkers are fair game.",
   },
   wholesome: {
+    emoji: "🥹",
     label: "Wholesome",
     blurb: "Sweet, upbeat, and a little goofy.",
     example: "This little guy is doing his best, and honestly, so am I.",
@@ -27,6 +30,7 @@ export const VOICES = {
       "Warm, wholesome, and a little goofy. Earnest and kind, like a friendly kid from the Midwest who's delighted by everything in the big city. No sarcasm.",
   },
   dramatic: {
+    emoji: "🎭",
     label: "Dramatic",
     blurb: "Over the top. Everything is a huge deal.",
     example: "I have never been more betrayed than by this dining hall pizza.",

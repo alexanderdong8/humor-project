@@ -27,13 +27,13 @@ export async function SiteHeader() {
               <span className={styles.name}>{profile?.first_name || "Profile"}</span>
             </Link>
             <form action={signOut}>
-              <button type="submit" className={styles.ghost}>
+              <button type="submit" className="btn btn-secondary btn-sm">
                 Sign out
               </button>
             </form>
           </div>
         ) : (
-          <Link href="/login" className={styles.cta}>
+          <Link href="/login" className="btn btn-primary btn-sm">
             Sign in
           </Link>
         )}

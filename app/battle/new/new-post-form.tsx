@@ -8,7 +8,7 @@ import styles from "../battle.module.css";
 type Props = {
   userId: string;
   theme: string;
-  voices: { id: string; label: string; blurb: string; example: string }[];
+  voices: { id: string; emoji: string; label: string; blurb: string; example: string }[];
   remaining: number;
 };
 
@@ -128,12 +128,9 @@ export function NewPostForm({ userId, theme, voices, remaining }: Props) {
           <img src={preview} alt="Your photo" className={styles.preview} />
         ) : (
           <div className={styles.dropPrompt}>
-            <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M9 3 7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9Zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"
-              />
-            </svg>
+            <span className={styles.dropEmoji} aria-hidden="true">
+              📸
+            </span>
             <p>
               <strong>Drop a photo here</strong> or pick one from your camera roll
             </p>
@@ -163,7 +160,12 @@ export function NewPostForm({ userId, theme, voices, remaining }: Props) {
           {voices.map((v) => (
             <label key={v.id} className={styles.voice} data-checked={voice === v.id || undefined}>
               <input type="radio" name="voice" value={v.id} checked={voice === v.id} onChange={() => setVoice(v.id)} />
-              <span className={styles.voiceLabel}>{v.label}</span>
+              <span className={styles.voiceLabel}>
+                <span className={styles.voiceEmoji} aria-hidden="true">
+                  {v.emoji}
+                </span>{" "}
+                {v.label}
+              </span>
               <span className={styles.voiceBlurb}>{v.blurb}</span>
               <span className={styles.voiceExample}>“{v.example}”</span>
             </label>
@@ -184,7 +186,7 @@ export function NewPostForm({ userId, theme, voices, remaining }: Props) {
       </div>
 
       <div className={styles.submitRow}>
-        <button type="submit" className={styles.primary} disabled={!file || busy}>
+        <button type="submit" className="btn btn-primary" disabled={!file || busy}>
           {stage === "uploading" ? "Uploading…" : stage === "writing" ? WRITING_LINES[line] : "Write 4 captions"}
         </button>
         <p className={styles.hint}>

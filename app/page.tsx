@@ -1,10 +1,14 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { JokeCard } from "@/components/joke-card";
+import { Mascot } from "@/components/mascot";
 import { getSession } from "@/lib/auth";
 import { getTopCaptionToday } from "@/lib/battle";
 import { getDailyTheme } from "@/lib/daily-theme";
-import { getJokeCategoryCounts, getJokeOfTheDay } from "@/lib/jokes";
+import { categoryEmoji, getJokeCategoryCounts, getJokeOfTheDay } from "@/lib/jokes";
 import styles from "./page.module.css";
+
+const TILE_COLORS = ["--sun-soft", "--sky-soft", "--pink-soft", "--mint-soft", "--grape-soft", "--tomato-soft"];
 
 export default async function Home() {
   const [{ user, profile }, jokeOfTheDay, categories, topCaption, daily] = await Promise.all([
@@ -20,88 +24,97 @@ export default async function Home() {
     <main id="main" className={styles.main}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.kicker}>Open mic, every day</p>
+          <p className={styles.sticker}>🎤 Open mic, every day</p>
           <h1 className={styles.headline}>
-            Jokes worth telling <em>twice.</em>
+            Jokes worth telling <span className={styles.marker}>twice.</span>
           </h1>
           <p className={styles.lede}>
-            A hand-picked library of one-liners, puns, and groan-worthy classics. Read the setup,
-            take a beat, then tap for the punchline.
+            Post a photo and AI writes the jokes. Vote on everyone else&apos;s, and crack open a library of
+            puns and one-liners while you&apos;re here.
           </p>
           <div className={styles.ctas}>
-            <Link href="/jokes" className={styles.primary}>
-              Browse the library
+            <Link href="/battle" className="btn btn-primary">
+              ⚔️ Play today&apos;s battle
             </Link>
-            <Link href={user ? "/members" : "/login"} className={styles.secondary}>
-              {user ? "Go to the Green Room" : "Join the Green Room"}
+            <Link href="/jokes" className="btn btn-secondary">
+              📚 Browse jokes
             </Link>
           </div>
+          {totalJokes > 0 && (
+            <ul className={styles.facts} aria-label="At a glance">
+              <li>
+                <strong>{totalJokes}</strong> jokes
+              </li>
+              <li>
+                <strong>{categories.length}</strong> categories
+              </li>
+              <li>
+                <strong>1</strong> new theme a day
+              </li>
+            </ul>
+          )}
         </div>
 
         <div className={styles.stage}>
-          <div className={styles.spotlight} aria-hidden="true" />
+          <Mascot mood="laughing" size={120} className={styles.mascot} />
+          <span className={`${styles.burst} ${styles.burstHa}`} aria-hidden="true">
+            HA!
+          </span>
+          <span className={`${styles.burst} ${styles.burstLol}`} aria-hidden="true">
+            LOL
+          </span>
           {jokeOfTheDay && (
             <div className={styles.feature}>
-              <p className={styles.onAir}>
-                <span className={styles.dot} aria-hidden="true" />
-                Joke of the day
-              </p>
+              <p className={styles.badge}>⭐ Joke of the day</p>
               <JokeCard joke={jokeOfTheDay} featured />
             </div>
           )}
         </div>
       </section>
 
-      {totalJokes > 0 && (
-        <dl className={styles.stats}>
-          <div>
-            <dt>Jokes in the library</dt>
-            <dd>{totalJokes}</dd>
-          </div>
-          <div>
-            <dt>Categories</dt>
-            <dd>{categories.length}</dd>
-          </div>
-          <div>
-            <dt>New pick</dt>
-            <dd>Daily</dd>
-          </div>
-        </dl>
-      )}
-
       <section className={styles.battle} aria-labelledby="battle-title">
         <div className={styles.battleCopy}>
-          <p className={styles.kicker}>Caption Battle · Today</p>
-          <h2 id="battle-title" className={styles.bandTitle}>
-            <em>{daily.theme}</em>
+          <p className={styles.kicker}>⚔️ Caption Battle · Today&apos;s theme</p>
+          <h2 id="battle-title" className={styles.battleTitle}>
+            {daily.theme}
           </h2>
-          {daily.trend && <p className={styles.trendNote}>Inspired by “{daily.trend},” trending on X in New York today</p>}
-          <p className={styles.battleLede}>
-            Snap it, upload it, and AI writes four captions in the style you pick. Everyone votes, and
-            the best line wins the day.
-          </p>
+          {daily.trend && (
+            <p className={styles.trend}>
+              📈 Inspired by <strong>{daily.trend}</strong>, trending on X in New York
+            </p>
+          )}
+          <ol className={styles.steps}>
+            <li>
+              <span>📸</span> Post a funny photo
+            </li>
+            <li>
+              <span>🤖</span> AI writes 4 captions
+            </li>
+            <li>
+              <span>😂</span> Everyone votes
+            </li>
+          </ol>
           <div className={styles.ctas}>
-            <Link href={user ? "/battle/new" : "/login"} className={styles.primary}>
+            <Link href={user ? "/battle/new" : "/login"} className="btn btn-primary">
               {user ? "Caption a photo" : "Sign in to play"}
             </Link>
-            <Link href="/battle" className={styles.secondary}>
-              See today&apos;s board
+            <Link href="/battle" className="btn btn-secondary">
+              See the board
             </Link>
           </div>
         </div>
         {topCaption ? (
           <Link href={`/battle/${topCaption.id}`} className={styles.leader}>
+            <span className={styles.leaderBadge}>👑 Leading today · {topCaption.top_score} pts</span>
             <span className={styles.leaderPhoto} style={{ backgroundImage: `url(${topCaption.image_url})` }} />
-            <span className={styles.leaderBody}>
-              <span className={styles.leaderLabel}>Leading today · {topCaption.top_score} pts</span>
-              <span className={styles.leaderText}>{topCaption.top_caption}</span>
-              <span className={styles.leaderBy}>{topCaption.author_name ?? "A member"}</span>
-            </span>
+            <span className={styles.leaderText}>“{topCaption.top_caption}”</span>
+            <span className={styles.leaderBy}>by {topCaption.author_name ?? "a member"}</span>
           </Link>
         ) : (
           <div className={styles.leaderEmpty}>
-            <span className={styles.leaderLabel}>No leader yet</span>
-            <p>Today&apos;s crown is up for grabs. Post the first photo.</p>
+            <Mascot mood="wow" size={72} />
+            <p className={styles.leaderEmptyTitle}>The crown is up for grabs!</p>
+            <p>Nobody&apos;s posted today. Be the first.</p>
           </div>
         )}
       </section>
@@ -110,16 +123,23 @@ export default async function Home() {
         <section className={styles.section} aria-labelledby="categories-title">
           <div className={styles.sectionHead}>
             <h2 id="categories-title" className={styles.sectionTitle}>
-              Pick your poison
+              Pick your flavor
             </h2>
             <Link href="/jokes" className={styles.textLink}>
               See all jokes →
             </Link>
           </div>
           <ul className={styles.categories}>
-            {categories.map((c) => (
+            {categories.map((c, i) => (
               <li key={c.category}>
-                <Link href={`/jokes?category=${encodeURIComponent(c.category)}`} className={styles.category}>
+                <Link
+                  href={`/jokes?category=${encodeURIComponent(c.category)}`}
+                  className={styles.category}
+                  style={{ "--tile": `var(${TILE_COLORS[i % TILE_COLORS.length]})` } as CSSProperties}
+                >
+                  <span className={styles.categoryEmoji} aria-hidden="true">
+                    {categoryEmoji(c.category)}
+                  </span>
                   <span className={styles.categoryName}>{c.category}</span>
                   <span className={styles.categoryCount}>
                     {c.joke_count} {c.joke_count === 1 ? "joke" : "jokes"}
@@ -132,32 +152,19 @@ export default async function Home() {
       )}
 
       <section className={styles.band} aria-labelledby="green-room-title">
-        <div>
-          <p className={styles.kicker}>Members only</p>
+        <Mascot mood="happy" size={88} className={styles.bandMascot} />
+        <div className={styles.bandCopy}>
+          <p className={styles.kicker}>🎤 Members only</p>
           <h2 id="green-room-title" className={styles.bandTitle}>
-            {user && profile?.first_name ? (
-              <>
-                Your set is waiting, <em>{profile.first_name}.</em>
-              </>
-            ) : (
-              <>
-                Step into the <em>Green Room.</em>
-              </>
-            )}
+            {user && profile?.first_name ? `Your set is waiting, ${profile.first_name}!` : "Come hang in the Green Room."}
           </h2>
+          <ul className={styles.perks}>
+            <li>Vote on every caption and climb today&apos;s board</li>
+            <li>Post up to 10 photos a day</li>
+            <li>A joke set picked for your sense of humor</li>
+          </ul>
         </div>
-        <ul className={styles.perks}>
-          <li>
-            <strong>Your own set.</strong> Pick a favorite kind of joke and we&apos;ll line them up.
-          </li>
-          <li>
-            <strong>A profile that&apos;s yours.</strong> Add your name and a photo.
-          </li>
-          <li>
-            <strong>One click to join.</strong> Sign in with Google. No passwords to remember.
-          </li>
-        </ul>
-        <Link href={user ? "/members" : "/login"} className={styles.primary}>
+        <Link href={user ? "/members" : "/login"} className="btn btn-primary">
           {user ? "Enter the Green Room" : "Sign in with Google"}
         </Link>
       </section>

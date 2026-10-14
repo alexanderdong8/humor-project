@@ -34,7 +34,7 @@ export default async function MembersPage() {
         <div className={styles.greeting}>
           <Avatar url={profile.avatar_url} name={displayName(profile, user)} size={64} />
           <div>
-            <p className={styles.kicker}>The Green Room</p>
+            <p className={styles.kicker}>🎤 The Green Room</p>
             <h1 className={styles.title}>
               Good to see you, <em>{profile.first_name}.</em>
             </h1>
@@ -61,10 +61,10 @@ export default async function MembersPage() {
         </ul>
 
         <div className={styles.actions} style={{ marginTop: "2rem" }}>
-          <Link href="/jokes" className={styles.primary}>
+          <Link href="/jokes" className="btn btn-primary">
             Browse the full library
           </Link>
-          <Link href="/profile" className={styles.secondary}>
+          <Link href="/profile" className="btn btn-secondary">
             {profile.favorite_category ? "Change your favorite" : "Pick a favorite"}
           </Link>
         </div>

@@ -24,7 +24,7 @@ export function PreviewCard({ post, priority = false }: { post: PostPreview; pri
         {post.top_caption && (
           <div className={styles.caption} data-winner={post.top_score > 0 || undefined}>
             <div className={styles.captionText}>
-              {post.top_score > 0 && <span className={styles.crown}>Crowd favorite</span>}
+              {post.top_score > 0 && <span className={styles.crown}>👑 Crowd favorite</span>}
               <p>{post.top_caption}</p>
             </div>
           </div>
@@ -45,13 +45,7 @@ export function LockedCaptions({ count }: { count: number }) {
         ))}
       </span>
       <span className={styles.lockedLabel}>
-        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"
-          />
-        </svg>
-        {count} more {count === 1 ? "caption" : "captions"}: sign in to read and vote
+        🔒 {count} more {count === 1 ? "caption" : "captions"}: sign in to read and vote
       </span>
     </Link>
   );
@@ -62,7 +56,7 @@ export function MembersWall() {
   return (
     <section className={styles.wall} aria-labelledby="wall-title">
       <div>
-        <p className={styles.kicker}>Members only</p>
+        <p className={styles.kicker}>🎤 Members only</p>
         <h2 id="wall-title" className={styles.wallTitle}>
           The full board is for members.
         </h2>
@@ -72,7 +66,7 @@ export function MembersWall() {
           <li>Post your own photos (10 a day)</li>
         </ul>
       </div>
-      <Link href="/login" className={styles.primary}>
+      <Link href="/login" className="btn btn-primary">
         Sign in with Google
       </Link>
     </section>

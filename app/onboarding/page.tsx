@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isProfileComplete, requireUser } from "@/lib/auth";
 import { getJokeCategories } from "@/lib/jokes";
 import { ProfileForm } from "@/components/profile-form";
+import { Mascot } from "@/components/mascot";
 import styles from "@/components/account.module.css";
 
 export const metadata: Metadata = {
@@ -19,7 +20,8 @@ export default async function OnboardingPage() {
   return (
     <main id="main" className={styles.page}>
       <section className={`${styles.panel} ${styles.narrow} ${styles.card}`}>
-        <p className={styles.kicker}>Step 1 of 1</p>
+        <Mascot mood="wow" size={72} className={styles.mascot} />
+        <p className={styles.kicker}>👋 One quick thing</p>
         <h1 className={styles.title}>
           What should we <em>call you?</em>
         </h1>
