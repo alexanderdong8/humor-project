@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
       { source: "/battle/vote", destination: "/vote", permanent: true },
       { source: "/battle/:id([0-9a-fA-F-]{36})", destination: "/post/:id", permanent: true },
       { source: "/post/new", destination: "/upload", permanent: true },
+      // The Green Room was folded into the signed-in home page.
+      { source: "/members", destination: "/", permanent: false },
     ];
   },
   async headers() {

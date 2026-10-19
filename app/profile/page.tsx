@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { displayName, requireUser } from "@/lib/auth";
-import { getJokeCategories } from "@/lib/jokes";
 import { ProfileForm } from "@/components/profile-form";
 import styles from "@/components/account.module.css";
 import { AvatarUploader } from "./avatar-uploader";
@@ -12,7 +11,6 @@ export const metadata: Metadata = {
 
 export default async function ProfilePage() {
   const { user, profile } = await requireUser();
-  const categories = await getJokeCategories();
 
   return (
     <main id="main" className={styles.page}>
@@ -26,7 +24,7 @@ export default async function ProfilePage() {
         <div className={styles.section}>
           <div className={styles.sectionLabel}>
             <h2>Photo</h2>
-            <p>Shown in the header and the Green Room.</p>
+            <p>Shown in the header and on your home page.</p>
           </div>
           <AvatarUploader
             userId={user.id}
@@ -38,15 +36,13 @@ export default async function ProfilePage() {
         <div className={styles.section}>
           <div className={styles.sectionLabel}>
             <h2>Details</h2>
-            <p>Your name and the kind of jokes you like best.</p>
+            <p>Your name, shown as the author of your uploads.</p>
           </div>
           <ProfileForm
             mode="profile"
-            categories={categories}
             defaults={{
               firstName: profile?.first_name ?? "",
               lastName: profile?.last_name ?? "",
-              favoriteCategory: profile?.favorite_category ?? "",
             }}
           />
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CaptionFaceoff, type FaceoffSide } from "@/components/caption-faceoff";
 import type { Duel } from "@/lib/duels";
@@ -84,6 +85,14 @@ export function DailyDuel({ postId, imageUrl, credit, initial }: Props) {
       <div className={styles.doneCard}>
         <p className={styles.emptyTitle}>You&apos;ve judged every pair today! 🎉</p>
         <p>See how the captions stack up below. A new meme drops at midnight.</p>
+        <div className={styles.quickActions}>
+          <Link href="/vote" className="btn btn-primary">
+            🗳️ Vote on uploads
+          </Link>
+          <Link href="/upload" className="btn btn-secondary">
+            📸 Upload a photo
+          </Link>
+        </div>
       </div>
     );
   }

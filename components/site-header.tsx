@@ -22,9 +22,9 @@ export async function SiteHeader() {
 
         {user ? (
           <div className={styles.account}>
-            <Link href="/members" className={styles.profileLink} title="Your Green Room: your posts and joke set">
+            <Link href="/profile" className={styles.profileLink} title="Your profile">
               <Avatar url={profile?.avatar_url ?? null} name={displayName(profile, user)} size={30} />
-              <span className={styles.name}>🎤 {profile?.first_name || "Green Room"}</span>
+              <span className={styles.name}>{profile?.first_name || "Profile"}</span>
             </Link>
             <form action={signOut}>
               <button type="submit" className="btn btn-secondary btn-sm">

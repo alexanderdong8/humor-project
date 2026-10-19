@@ -1,20 +1,19 @@
 # Punchline
 
-A small, hand-picked joke library with Google sign-in and a members-only "Green Room".
+A caption game and joke library: upload a photo, battle its AI captions, vote on everyone else's, and judge a daily AI meme.
 Built with Next.js 16 (App Router) and Supabase (Postgres, Auth, Storage), deployed on Vercel.
 
 ## Features
 
 - **Library** (`/jokes`): every joke, filterable by category and paginated 9 per page. Punchlines stay hidden until you tap the card.
-- **Joke of the day** on the home page, the same for every visitor on a given day.
+- **Home** (`/`): signed out, it's the pitch, today's theme, today's top upload, and the joke of the day. Signed in, it becomes your dashboard: today's theme, three cards showing what's waiting (uploads left today or a draft to finish, matchups left to vote on, caption pairs left on the daily meme), all your uploads with their vote records, today's top upload, the joke of the day (the same for everyone on a given day), and the joke categories.
 - **Google sign-in** via Supabase Auth. New users get a `profiles` row from a database trigger and are asked for their name before entering.
-- **Profile** (`/profile`): edit first and last name and a favorite category, and upload a photo to Supabase Storage.
+- **Profile** (`/profile`, protected): edit first and last name and upload a photo to Supabase Storage. Signed-out visitors are redirected to `/login`.
 - **Upload** (`/upload` → `/post/[id]/pick`): the page explains the flow, then: upload a photo and pick a caption style (Group chat, Sarcastic, Wholesome, Dramatic); Google Gemini writes 4 captions; the captions battle head-to-head (two semifinals and a final) while you tap the funnier one each round. The winner becomes the photo's **only** caption and the upload goes live; the losing captions are deleted. Drafts stay private until the caption battle is finished.
 - **Vote** (`/vote`), the community vote: two uploads (photo + winning caption) side by side; tap the funnier (← / → work too). Every vote is a row in `post_battles` and updates both uploads' win/loss records. Members never vote on their own uploads or the same matchup twice. A new theme every day, generated from what's trending in New York (X trends when reachable, otherwise Google's trending searches).
 - **Leaderboard** (`/top`): browse-only rankings by vote record (Today / This week / All-time). Voting only happens in Vote.
-- **Daily AI Meme** (`/daily`): each night the AI picks a meme template from Imgflip's 100 most popular for the day's theme and writes 4 captions in that meme's format. Members battle its captions two at a time (rows in `caption_duels`) and see live standings, plus yesterday's winner. It lives on its own route, separate from member posts.
+- **Daily AI Meme** (`/daily`): each night the AI picks a meme template from Imgflip's 100 most popular for the day's theme (never one used in the last 45 days) and writes 4 captions in that meme's format. Members battle its captions two at a time (rows in `caption_duels`) and see live standings, plus yesterday's winner. It lives on its own route, separate from member posts.
 - **Remix** (post page, owner only): get 3 new captions that are 😈 Meaner, 😂 Funnier, or 🫠 Relatable, then a caption battle against your current caption. The winner stays and the rest are deleted, so a photo never has more than 4 captions (enforced by a database trigger). Remixes aren't capped per photo; each member gets 20 a day. Each remix and its prompt are saved in `caption_remixes`.
-- **Green Room** (`/members`): your home base, with a "What is the Green Room?" help panel, a joke set you tune by tapping a favorite category (saves instantly), all your uploads with their vote records (and drafts waiting on their caption battle), and shortcuts. Signed-out visitors are redirected to `/login`.
 
 ## Local development
 
@@ -67,7 +66,7 @@ The job writes through `THEME_WRITER_DB_URL`, a Postgres login (`theme_writer`) 
 
 ## Members vs. visitors
 
-Signed-out visitors can't read posts or captions directly (RLS). They see a preview from the `battle_preview` database function: at most 3 published posts with their caption, and today's daily meme with its leading caption. The joke library shows them the first page of each category. Uploading, voting, remixing, the full leaderboard, all four daily-meme captions, and the Green Room require signing in.
+Signed-out visitors can't read posts or captions directly (RLS). They see a preview from the `battle_preview` database function: at most 3 published posts with their caption, and today's daily meme with its leading caption. The joke library shows them the first page of each category. Uploading, voting, remixing, the full leaderboard, all four daily-meme captions, and the dashboard require signing in.
 
 ## Row level security
 

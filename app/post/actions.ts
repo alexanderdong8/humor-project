@@ -238,5 +238,5 @@ export async function deletePost(postId: string) {
 
   if (post) await supabase.storage.from(BUCKET).remove([post.image_path]);
   revalidatePath("/top");
-  redirect("/members");
+  redirect("/#your-uploads");
 }

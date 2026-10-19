@@ -324,6 +324,18 @@
   letter-spacing: -0.01em;
 }
 
+.sectionTitleSm {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.section.tight,
+.split.tight {
+  padding-top: clamp(2.25rem, 5vw, 3.25rem);
+}
+
 .textLink {
   font-family: var(--font-display);
   font-weight: 600;
@@ -373,7 +385,7 @@
   color: var(--muted);
 }
 
-/* Green Room band */
+/* Sign-in band */
 
 .band {
   display: grid;
@@ -413,9 +425,263 @@
   font-weight: 800;
 }
 
+
+/* Member dashboard */
+
+.dash {
+  padding-top: clamp(1.75rem, 4vw, 2.75rem);
+}
+
+.dashHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.5rem;
+}
+
+.dashTitle {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.dashMascot {
+  flex: none;
+  animation: wobble 3.4s ease-in-out infinite;
+}
+
+.actions {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.actions > li {
+  display: flex;
+}
+
+.action {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem 1.25rem 1.2rem;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--tile, var(--sun-soft));
+  box-shadow: var(--shadow);
+  transition: transform 0.2s var(--bounce), box-shadow 0.2s var(--ease);
+}
+
+.action:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.actionTop {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.actionEmoji {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 1.45rem;
+}
+
+.actionThumb {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--surface);
+  transform: rotate(-5deg);
+}
+
+.actionThumb img {
+  object-fit: cover;
+}
+
+.actionStat {
+  margin-left: auto;
+  padding: 0.2rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.actionStat strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.actionTitle {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.actionText {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.actionGo {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* The member's uploads */
+
+/* 6, 3, or 2 across, so the first six uploads always fill whole rows. */
+.uploads {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  height: 100%;
+  padding: 0.5rem 0.5rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+}
+
+.upload:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow);
+}
+
+.uploadPhoto {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--sun-soft);
+}
+
+.uploadPhoto img {
+  object-fit: cover;
+}
+
+.uploadBadge {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  padding: 0.05rem 0.55rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--mint);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.uploadBadge[data-draft] {
+  background: var(--sun);
+}
+
+.uploadCaption {
+  display: -webkit-box;
+  flex: 1;
+  padding: 0 0.25rem;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.uploadMeta {
+  padding: 0 0.25rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.uploadsEmpty {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 2.5px dashed var(--ink);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.uploadsEmpty p {
+  flex: 1 1 260px;
+  color: var(--muted);
+}
+
+.uploadsEmpty strong {
+  color: var(--ink);
+}
+
+.more {
+  margin-top: 1rem;
+}
+
+.more summary {
+  width: fit-content;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.more[open] summary {
+  margin-bottom: 1rem;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 2.5rem clamp(1.5rem, 4vw, 2.5rem);
+}
+
 @media (max-width: 900px) {
   .hero,
-  .battle {
+  .battle,
+  .actions,
+  .split {
     grid-template-columns: 1fr;
   }
 
@@ -425,7 +691,55 @@
   }
 }
 
+@media (max-width: 1000px) {
+  .uploads {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 520px) {
+  .dashMascot {
+    display: none;
+  }
+
+  .uploads {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .actions {
+    gap: 0.9rem;
+    margin-top: 1.25rem;
+  }
+
+  .action {
+    gap: 0.25rem;
+    padding: 0.85rem 1rem 0.95rem;
+  }
+
+  .actionTop {
+    margin-bottom: 0.15rem;
+  }
+
+  .actionEmoji,
+  .actionThumb {
+    width: 38px;
+    height: 38px;
+    font-size: 1.2rem;
+  }
+
+  .actionTitle {
+    font-size: 1.2rem;
+  }
+
+  .actionText {
+    font-size: 0.9rem;
+  }
+
+  .actionGo {
+    margin-top: 0.15rem;
+  }
+
   .burstHa {
     right: 8rem;
   }

@@ -7,12 +7,12 @@ import { GoogleButton } from "./google-button";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in with Google to enter the Green Room.",
+  description: "Sign in with Google to upload photos, battle AI captions, and vote.",
 };
 
 export default async function LoginPage(props: PageProps<"/login">) {
   const { user, profile } = await getSession();
-  if (user) redirect(isProfileComplete(profile) ? "/members" : "/onboarding");
+  if (user) redirect(isProfileComplete(profile) ? "/" : "/onboarding");
 
   const { error } = await props.searchParams;
 
@@ -22,10 +22,10 @@ export default async function LoginPage(props: PageProps<"/login">) {
         <Mascot mood="happy" size={84} className={styles.mascot} />
         <p className={styles.kicker}>🎤 Members only</p>
         <h1 className={styles.title}>
-          Welcome to the <em>Green Room.</em>
+          Grab the <em>mic.</em>
         </h1>
         <p className={styles.lede}>
-          Sign in to get a set of jokes picked for you and a profile of your own.
+          Sign in to upload photos, battle their AI captions, and vote on everyone else&apos;s.
         </p>
         <GoogleButton />
         {typeof error === "string" && (

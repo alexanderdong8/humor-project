@@ -91,9 +91,15 @@ export default async function PostPage(props: PageProps<"/post/[id]">) {
 
   return (
     <main id="main" className={styles.main}>
+      {isOwner && (
+        <Link href="/#your-uploads" className={styles.back}>
+          ← Your uploads
+        </Link>
+      )}
       {searchParams.new === "1" && isOwner && (
         <p className={styles.notice} role="status">
-          🎉 Your caption won its battle and your upload is live. Share it so people vote!
+          🎉 Your caption won its battle and your upload is live. Share it so people vote, or{" "}
+          <Link href="/vote">vote on other uploads →</Link>
         </p>
       )}
       {searchParams.remixed === "1" && isOwner && (

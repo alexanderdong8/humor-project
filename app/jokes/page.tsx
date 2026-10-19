@@ -122,7 +122,7 @@ export default async function JokesPage(props: PageProps<"/jokes">) {
                 <p className={styles.wallTitle}>
                   You&apos;re seeing {jokes.length} of {total} jokes.
                 </p>
-                <p>Sign in to unlock the whole library, the Green Room, uploading, and voting.</p>
+                <p>Sign in to unlock the whole library, uploading, and voting.</p>
               </div>
               <Link href="/login" className="btn btn-primary">
                 Sign in with Google

@@ -6,13 +6,12 @@ import styles from "./account.module.css";
 
 type Props = {
   mode: "onboarding" | "profile";
-  categories: string[];
-  defaults: { firstName: string; lastName: string; favoriteCategory: string };
+  defaults: { firstName: string; lastName: string };
 };
 
 const initialState: ProfileFormState = { status: "idle" };
 
-export function ProfileForm({ mode, categories, defaults }: Props) {
+export function ProfileForm({ mode, defaults }: Props) {
   const [state, formAction, pending] = useActionState(saveProfile, initialState);
   const errors = state.fieldErrors ?? {};
 
@@ -48,23 +47,9 @@ export function ProfileForm({ mode, categories, defaults }: Props) {
         </label>
       </div>
 
-      <label className={styles.field}>
-        <span>
-          Favorite kind of joke <em>(optional)</em>
-        </span>
-        <select name="favoriteCategory" defaultValue={defaults.favoriteCategory}>
-          <option value="">No favorite</option>
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </label>
-
       <div className={styles.actions}>
         <button type="submit" className="btn btn-primary" disabled={pending}>
-          {pending ? "Saving…" : mode === "onboarding" ? "Enter the Green Room" : "Save changes"}
+          {pending ? "Saving…" : mode === "onboarding" ? "Let's go" : "Save changes"}
         </button>
         <p
           className={state.status === "error" ? styles.error : styles.success}

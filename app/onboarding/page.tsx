@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { isProfileComplete, requireUser } from "@/lib/auth";
-import { getJokeCategories } from "@/lib/jokes";
 import { ProfileForm } from "@/components/profile-form";
 import { Mascot } from "@/components/mascot";
 import styles from "@/components/account.module.css";
@@ -13,9 +12,7 @@ export const metadata: Metadata = {
 
 export default async function OnboardingPage() {
   const { user, profile } = await requireUser();
-  if (isProfileComplete(profile)) redirect("/members");
-
-  const categories = await getJokeCategories();
+  if (isProfileComplete(profile)) redirect("/");
 
   return (
     <main id="main" className={styles.page}>
@@ -26,16 +23,13 @@ export default async function OnboardingPage() {
           What should we <em>call you?</em>
         </h1>
         <p className={styles.lede}>
-          You&apos;re signed in as <strong>{user.email}</strong>. Add your name and we&apos;ll open
-          the Green Room.
+          You&apos;re signed in as <strong>{user.email}</strong>. Add your name and you&apos;re in.
         </p>
         <ProfileForm
           mode="onboarding"
-          categories={categories}
           defaults={{
             firstName: profile?.first_name ?? "",
             lastName: profile?.last_name ?? "",
-            favoriteCategory: profile?.favorite_category ?? "",
           }}
         />
       </section>
