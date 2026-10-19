@@ -29,12 +29,12 @@ export default async function Home() {
             Jokes worth telling <span className={styles.marker}>twice.</span>
           </h1>
           <p className={styles.lede}>
-            Post a photo, let AI write the jokes, and pick your favorite. Then battle everyone else&apos;s posts,
-            vote on the daily AI meme, and crack open a library of puns while you&apos;re here.
+            Upload a photo, let AI write four captions, and battle them until one wins. Then vote on everyone
+            else&apos;s uploads, judge the daily AI meme, and crack open a library of puns while you&apos;re here.
           </p>
           <div className={styles.ctas}>
-            <Link href="/battle" className="btn btn-primary">
-              ⚔️ Play today&apos;s battle
+            <Link href="/upload" className="btn btn-primary">
+              📸 Upload a photo
             </Link>
             <Link href="/daily" className="btn btn-secondary">
               🤖 Today&apos;s AI meme
@@ -74,7 +74,7 @@ export default async function Home() {
 
       <section className={styles.battle} aria-labelledby="battle-title">
         <div className={styles.battleCopy}>
-          <p className={styles.kicker}>⚔️ Battle · Today&apos;s theme</p>
+          <p className={styles.kicker}>📸 Upload · Today&apos;s theme</p>
           <h2 id="battle-title" className={styles.battleTitle}>
             {daily.theme}
           </h2>
@@ -85,23 +85,23 @@ export default async function Home() {
           )}
           <ol className={styles.steps}>
             <li>
-              <span>📸</span> Post a photo
+              <span>📸</span> Upload a photo
             </li>
             <li>
-              <span>🏆</span> Pick your favorite of 4 AI captions
+              <span>⚔️</span> Battle its 4 AI captions
             </li>
             <li>
-              <span>⚔️</span> Battle other posts
+              <span>🏆</span> Keep the winner
             </li>
           </ol>
           <div className={styles.ctas}>
             {user ? (
               <>
-                <Link href="/battle" className="btn btn-primary">
-                  ⚔️ Battle
+                <Link href="/upload" className="btn btn-primary">
+                  📸 Upload
                 </Link>
-                <Link href="/post/new" className="btn btn-secondary">
-                  📸 Post a photo
+                <Link href="/vote" className="btn btn-secondary">
+                  🗳️ Vote
                 </Link>
               </>
             ) : (
@@ -132,7 +132,7 @@ export default async function Home() {
           <div className={styles.leaderEmpty}>
             <Mascot mood="wow" size={72} />
             <p className={styles.leaderEmptyTitle}>The crown is up for grabs!</p>
-            <p>No post has won a battle today. Yours could be first.</p>
+            <p>No upload has won a vote today. Yours could be first.</p>
           </div>
         )}
       </section>

@@ -12,7 +12,8 @@ export function SiteFooter() {
           <p>{site.tagline}</p>
         </div>
         <nav className={styles.links} aria-label="Footer">
-          <Link href="/battle">Battle</Link>
+          <Link href="/upload">Upload</Link>
+          <Link href="/vote">Vote</Link>
           <Link href="/top">Leaderboard</Link>
           <Link href="/daily">Daily AI Meme</Link>
           <Link href="/jokes">Joke Library</Link>

@@ -119,6 +119,21 @@
   }
 }
 
+@media (max-width: 520px) {
+  /* Five links don't fit on a phone; the joke library stays linked from home, the footer, and the Green Room. */
+  .nav a[href="/jokes"] {
+    display: none;
+  }
+
+  .left {
+    gap: 0.5rem;
+  }
+
+  .left > a {
+    flex: none;
+  }
+}
+
 @media (max-width: 440px) {
   .account form {
     display: none;

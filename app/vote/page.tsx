@@ -10,24 +10,24 @@ import { Arena } from "./arena";
 import styles from "@/components/game.module.css";
 
 export const metadata: Metadata = {
-  title: "Battle",
-  description: "Two photos, each with one caption. Tap the funnier post; every pick moves the leaderboard.",
+  title: "Vote",
+  description: "Two uploads, each with the caption that won its caption battle. Tap the funnier one; every vote moves the leaderboard.",
 };
 
-export default async function BattlePage() {
+export default async function VotePage() {
   const [{ user, profile }, daily] = await Promise.all([getSession(), getDailyTheme()]);
   if (user && !isProfileComplete(profile)) redirect("/onboarding");
 
   const header = (
     <header className={styles.hero}>
       <div>
-        <p className={styles.kicker}>⚔️ Battle · Today&apos;s theme: {daily.theme}</p>
+        <p className={styles.kicker}>🗳️ Vote · Today&apos;s theme: {daily.theme}</p>
         <h1 className={styles.title}>
-          Which post is <em>funnier?</em>
+          Which upload is <em>funnier?</em>
         </h1>
         <p className={styles.lede}>
-          Each post is a photo and the one caption its owner picked. Tap the funnier one; every pick counts toward
-          the leaderboard.
+          Each upload is a photo with the caption that won its caption battle. You see two at a time; tap the funnier
+          one. Every vote counts toward the leaderboard.
         </p>
         {daily.trend && (
           <p className={styles.trendNote}>
@@ -36,8 +36,8 @@ export default async function BattlePage() {
         )}
       </div>
       <div className={styles.heroActions}>
-        <Link href={user ? "/post/new" : "/login"} className="btn btn-primary">
-          📸 Post a photo
+        <Link href="/upload" className="btn btn-primary">
+          📸 Upload a photo
         </Link>
         <Link href="/top" className="btn btn-secondary">
           🏆 Leaderboard
@@ -54,23 +54,23 @@ export default async function BattlePage() {
         <ol className={styles.howItWorks} aria-label="How it works">
           <li>
             <span className={styles.howEmoji}>📸</span>
-            <strong>Post a photo</strong>
-            <span>The AI writes 4 captions for it.</span>
+            <strong>Members upload</strong>
+            <span>Each photo gets the caption that won its caption battle.</span>
+          </li>
+          <li>
+            <span className={styles.howEmoji}>🗳️</span>
+            <strong>You vote</strong>
+            <span>Two uploads at a time. Tap the funnier one.</span>
           </li>
           <li>
             <span className={styles.howEmoji}>🏆</span>
-            <strong>Pick your caption</strong>
-            <span>Knock them out two at a time. Only the winner goes on your photo.</span>
-          </li>
-          <li>
-            <span className={styles.howEmoji}>⚔️</span>
-            <strong>Battle</strong>
-            <span>Posts go head-to-head. Everyone votes for the funnier one.</span>
+            <strong>The best rise</strong>
+            <span>Votes build each upload&apos;s record on the leaderboard.</span>
           </li>
         </ol>
         {top.length > 0 && (
           <>
-            <h2 className={styles.sectionTitle}>🏆 Top posts right now</h2>
+            <h2 className={styles.sectionTitle}>🏆 Top uploads right now</h2>
             <div className={styles.memeGrid}>
               {top.map((post, i) => {
                 const rate = winRate(post.battle_wins, post.battle_losses);
@@ -99,12 +99,12 @@ export default async function BattlePage() {
           <div>
             <p className={styles.kicker}>🎤 Members only</p>
             <h2 id="wall-title" className={styles.wallTitle}>
-              Sign in to battle.
+              Sign in to vote.
             </h2>
             <ul className={styles.wallList}>
-              <li>Vote in head-to-head battles and move the leaderboard</li>
-              <li>Post your own photos (10 a day) and pick their captions</li>
-              <li>Battle the captions on today&apos;s AI meme</li>
+              <li>Vote on uploads two at a time and move the leaderboard</li>
+              <li>Upload your own photos (10 a day) and battle their captions</li>
+              <li>Vote on the captions of today&apos;s AI meme</li>
             </ul>
           </div>
           <Link href="/login" className="btn btn-primary">

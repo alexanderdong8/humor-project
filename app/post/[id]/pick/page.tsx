@@ -42,13 +42,13 @@ export default async function PickPage(props: PageProps<"/post/[id]/pick">) {
         </Link>
       )}
       <header className={styles.centerHeader}>
-        <p className={styles.kicker}>{mode === "new" ? "📸 Step 2 of 2" : "🔀 Remix battle"}</p>
+        <p className={styles.kicker}>{mode === "new" ? "📸 Upload · Caption battle" : "🔀 Remix · Caption battle"}</p>
         <h1 className={styles.title}>
-          Pick your <em>caption.</em>
+          Battle your <em>captions.</em>
         </h1>
         <p className={styles.lede}>
           {mode === "new"
-            ? "The AI wrote 4 captions. Knock them out two at a time; the winner is the only caption people will see on your photo, and it goes straight into the battle."
+            ? "The AI wrote 4 captions. They face off two at a time; tap the funnier one each round. The winner of the final is the only caption people will see on your photo."
             : "Your current caption takes on the new ones. Whatever wins stays on your photo; the rest are deleted."}
         </p>
       </header>

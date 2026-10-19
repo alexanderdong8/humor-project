@@ -13,8 +13,8 @@ export type BattleResult =
   | { ok: false; error: "signin" | "failed" };
 
 /**
- * Saves one battle pick as a row in post_battles (RLS checks both posts are
- * published and neither is the judge's), then returns both posts' updated
+ * Saves one vote as a row in post_battles (RLS checks both uploads are
+ * published and neither is the voter's), then returns both uploads' updated
  * records and the next matchup.
  */
 export async function judgeMatchup(
@@ -34,7 +34,7 @@ export async function judgeMatchup(
   const { error } = await supabase.from("post_battles").insert({ post_a: postA, post_b: postB, winner: input.winner });
   // 23505: already judged this matchup (e.g. a double tap); treat it as done.
   if (error && error.code !== "23505") {
-    console.error("[battle] saving pick failed", error);
+    console.error("[vote] saving vote failed", error);
     return { ok: false, error: "failed" };
   }
 

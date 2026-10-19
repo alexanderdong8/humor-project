@@ -25,7 +25,7 @@ export async function generateMetadata(props: PageProps<"/post/[id]">): Promise<
   const title = preview.caption ? `“${preview.caption}”` : "Punchline";
   return {
     title,
-    description: "A photo, one caption, and a battle record on Punchline.",
+    description: "A photo, its winning caption, and its vote record on Punchline.",
     openGraph: { title, images: [{ url: preview.image_url }] },
     twitter: { card: "summary_large_image", title, images: [preview.image_url] },
   };
@@ -66,10 +66,10 @@ export default async function PostPage(props: PageProps<"/post/[id]">) {
             <p className={styles.kicker}>📸 by {preview.author_name ?? "a member"}</p>
             <h1 className={styles.detailTitle}>How funny is this?</h1>
             <BattleRecordCard wins={preview.battle_wins} losses={preview.battle_losses} />
-            <p className={styles.hint}>Members battle posts head-to-head. Sign in to vote and post your own.</p>
+            <p className={styles.hint}>Members vote on uploads two at a time. Sign in to vote and upload your own.</p>
             <div className={styles.detailActions}>
               <Link href="/login" className="btn btn-primary">
-                Sign in to battle
+                Sign in to vote
               </Link>
               <ShareButton />
             </div>
@@ -93,7 +93,7 @@ export default async function PostPage(props: PageProps<"/post/[id]">) {
     <main id="main" className={styles.main}>
       {searchParams.new === "1" && isOwner && (
         <p className={styles.notice} role="status">
-          🎉 Your post is live and in the battle. Share it so people vote!
+          🎉 Your caption won its battle and your upload is live. Share it so people vote!
         </p>
       )}
       {searchParams.remixed === "1" && isOwner && (
@@ -112,9 +112,9 @@ export default async function PostPage(props: PageProps<"/post/[id]">) {
 
         <div className={styles.detailBody}>
           <p className={styles.kicker}>
-            📸 {isOwner ? "Your post" : `by ${post.author_name ?? "a member"}`}
+            📸 {isOwner ? "Your upload" : `by ${post.author_name ?? "a member"}`}
           </p>
-          <h1 className={styles.detailTitle}>Battle record</h1>
+          <h1 className={styles.detailTitle}>Vote record</h1>
           <BattleRecordCard wins={post.battle_wins} losses={post.battle_losses} />
           <p className={styles.chips}>
             {post.theme && <span className={styles.chip}>{post.theme}</span>}
@@ -139,8 +139,8 @@ export default async function PostPage(props: PageProps<"/post/[id]">) {
             </>
           ) : (
             <div className={styles.detailActions}>
-              <Link href="/battle" className="btn btn-primary">
-                ⚔️ Battle more posts
+              <Link href="/vote" className="btn btn-primary">
+                🗳️ Vote on more uploads
               </Link>
               <ShareButton />
             </div>

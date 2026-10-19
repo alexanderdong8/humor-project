@@ -75,7 +75,7 @@ export function CaptionBracket({ postId, imageUrl, candidates, mode }: Props) {
           <p className={styles.hint}>
             {saving
               ? mode === "new"
-                ? "Posting it to the battle…"
+                ? "Posting your upload…"
                 : "Updating your post…"
               : error ?? "Saved!"}
           </p>

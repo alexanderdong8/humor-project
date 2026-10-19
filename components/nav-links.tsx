@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import styles from "./site-header.module.css";
 
 const LINKS = [
-  { href: "/battle", emoji: "⚔️", label: "Battle", match: ["/battle", "/post"] },
+  { href: "/upload", emoji: "📸", label: "Upload", match: ["/upload", "/post"] },
+  { href: "/vote", emoji: "🗳️", label: "Vote", match: ["/vote"] },
   { href: "/top", emoji: "🏆", label: "Top", match: ["/top"] },
   { href: "/daily", emoji: "🤖", label: "Daily", match: ["/daily"] },
   { href: "/jokes", emoji: "📚", label: "Jokes", match: ["/jokes"] },

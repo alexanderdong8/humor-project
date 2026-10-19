@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-/** The member's home base: their joke set, their posts and battle records, and shortcuts. */
+/** The member's home base: their joke set, their uploads and vote records, and shortcuts. */
 export default async function MembersPage() {
   // The proxy already bounced signed-out visitors; this is the authoritative check.
   const { user, profile } = await requireUser();
@@ -58,25 +58,25 @@ export default async function MembersPage() {
                 Tap the card to reveal each punchline.
               </li>
               <li>
-                <strong>Your posts:</strong> every photo you&apos;ve posted, its caption, and its battle record. Open a
-                post to remix its caption.
+                <strong>Your uploads:</strong> every photo you&apos;ve uploaded, its winning caption, and how it&apos;s
+                doing in Vote. Open one to remix its caption.
               </li>
               <li>
-                <strong>Shortcuts</strong> to Battle, the Daily AI Meme, and posting a new photo.
+                <strong>Shortcuts</strong> to Upload, Vote, and the Daily AI Meme.
               </li>
             </ul>
           </div>
         </details>
 
         <div className={styles.shortcuts}>
-          <Link href="/battle" className="btn btn-primary">
-            ⚔️ Battle
+          <Link href="/upload" className="btn btn-primary">
+            📸 Upload
+          </Link>
+          <Link href="/vote" className="btn btn-secondary">
+            🗳️ Vote
           </Link>
           <Link href="/daily" className="btn btn-secondary">
             🤖 Daily meme
-          </Link>
-          <Link href="/post/new" className="btn btn-secondary">
-            📸 Post a photo
           </Link>
           <Link href="/profile" className="btn btn-secondary">
             ✏️ Edit profile
@@ -109,12 +109,12 @@ export default async function MembersPage() {
 
         <section className={styles.block} aria-labelledby="posts-title">
           <h2 id="posts-title" className={styles.sectionTitle}>
-            📸 Your posts
+            📸 Your uploads
           </h2>
           {posts.length === 0 ? (
             <p className={styles.blockLede}>
-              You haven&apos;t posted yet. <Link href="/post/new">Post a photo</Link>, pick your caption, and send it into
-              battle.
+              You haven&apos;t uploaded yet. <Link href="/upload">Upload a photo</Link>, battle its captions, and keep the
+              winner.
             </p>
           ) : (
             <ul className={styles.myPosts}>
@@ -129,12 +129,12 @@ export default async function MembersPage() {
                       </span>
                       <span className={styles.myText}>
                         <span className={styles.myCaption}>
-                          {draft ? "Draft: pick your caption to post it" : (post.caption?.text ?? "…")}
+                          {draft ? "Draft: finish the caption battle to post it" : (post.caption?.text ?? "…")}
                         </span>
                         <span className={styles.myMeta}>
                           {draft
-                            ? "Not in the battle yet"
-                            : `${post.battle_wins}W · ${post.battle_losses}L${rate !== null ? ` · ${rate}% win rate` : " · no battles yet"}`}
+                            ? "Not live yet"
+                            : `${post.battle_wins}W · ${post.battle_losses}L${rate !== null ? ` · ${rate}% win rate` : " · no votes yet"}`}
                         </span>
                       </span>
                       <span className={styles.myGo} aria-hidden="true">

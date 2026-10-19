@@ -9,12 +9,12 @@ Built with Next.js 16 (App Router) and Supabase (Postgres, Auth, Storage), deplo
 - **Joke of the day** on the home page, the same for every visitor on a given day.
 - **Google sign-in** via Supabase Auth. New users get a `profiles` row from a database trigger and are asked for their name before entering.
 - **Profile** (`/profile`): edit first and last name and a favorite category, and upload a photo to Supabase Storage.
-- **Post a photo** (`/post/new` → `/post/[id]/pick`): upload a photo and pick a caption style (Group chat, Sarcastic, Wholesome, Dramatic); Google Gemini writes 4 captions. The post stays a private draft while you knock the captions out in a bracket (two semifinals and a final). The winner becomes the photo's **only** caption and the post goes live; the losing captions are deleted.
-- **Battle** (`/battle`), the one community vote: two posts (photo + caption) side by side; tap the funnier (← / → work too). Every pick is a row in `post_battles` and updates both posts' win/loss records. Members never judge their own posts or the same matchup twice. A new theme every day, generated from what's trending in New York (X trends when reachable, otherwise Google's trending searches).
-- **Leaderboard** (`/top`): browse-only rankings by battle record (Today / This week / All-time). Voting only happens in Battle.
+- **Upload** (`/upload` → `/post/[id]/pick`): the page explains the flow, then: upload a photo and pick a caption style (Group chat, Sarcastic, Wholesome, Dramatic); Google Gemini writes 4 captions; the captions battle head-to-head (two semifinals and a final) while you tap the funnier one each round. The winner becomes the photo's **only** caption and the upload goes live; the losing captions are deleted. Drafts stay private until the caption battle is finished.
+- **Vote** (`/vote`), the community vote: two uploads (photo + winning caption) side by side; tap the funnier (← / → work too). Every vote is a row in `post_battles` and updates both uploads' win/loss records. Members never vote on their own uploads or the same matchup twice. A new theme every day, generated from what's trending in New York (X trends when reachable, otherwise Google's trending searches).
+- **Leaderboard** (`/top`): browse-only rankings by vote record (Today / This week / All-time). Voting only happens in Vote.
 - **Daily AI Meme** (`/daily`): each night the AI picks a meme template from Imgflip's 100 most popular for the day's theme and writes 4 captions in that meme's format. Members battle its captions two at a time (rows in `caption_duels`) and see live standings, plus yesterday's winner. It lives on its own route, separate from member posts.
-- **Remix** (post page, owner only): get 3 new captions that are 😈 Meaner, 😂 Funnier, or 🫠 Relatable, then battle them against your current caption. The winner stays and the rest are deleted, so a photo never has more than 4 captions (enforced by a database trigger). Remixes aren't capped per photo; each member gets 20 a day. Each remix and its prompt are saved in `caption_remixes`.
-- **Green Room** (`/members`): your home base, with a "What is the Green Room?" help panel, a joke set you tune by tapping a favorite category (saves instantly), all your posts with their battle records (and drafts waiting for a caption), and shortcuts. Signed-out visitors are redirected to `/login`.
+- **Remix** (post page, owner only): get 3 new captions that are 😈 Meaner, 😂 Funnier, or 🫠 Relatable, then a caption battle against your current caption. The winner stays and the rest are deleted, so a photo never has more than 4 captions (enforced by a database trigger). Remixes aren't capped per photo; each member gets 20 a day. Each remix and its prompt are saved in `caption_remixes`.
+- **Green Room** (`/members`): your home base, with a "What is the Green Room?" help panel, a joke set you tune by tapping a favorite category (saves instantly), all your uploads with their vote records (and drafts waiting on their caption battle), and shortcuts. Signed-out visitors are redirected to `/login`.
 
 ## Local development
 
@@ -67,11 +67,11 @@ The job writes through `THEME_WRITER_DB_URL`, a Postgres login (`theme_writer`) 
 
 ## Members vs. visitors
 
-Signed-out visitors can't read posts or captions directly (RLS). They see a preview from the `battle_preview` database function: at most 3 published posts with their caption, and today's daily meme with its leading caption. The joke library shows them the first page of each category. Battling, posting, remixing, the full leaderboard, all four daily-meme captions, and the Green Room require signing in.
+Signed-out visitors can't read posts or captions directly (RLS). They see a preview from the `battle_preview` database function: at most 3 published posts with their caption, and today's daily meme with its leading caption. The joke library shows them the first page of each category. Uploading, voting, remixing, the full leaderboard, all four daily-meme captions, and the Green Room require signing in.
 
 ## Row level security
 
-RLS is on for every table. Anyone can read jokes and the daily theme. Members see published posts, but only each post's chosen caption (plus their own drafts and candidates). Members can only edit their own profile, create posts under their own id (10 per day), pick and publish their own post's caption, delete their own losing captions, remix only their own posts, and see their own battle and duel picks. Battle records, caption tallies, and post authors are written by triggers, and members can't update any other post column, so none of it can be spoofed from the client. A photo can never have more than 4 captions.
+RLS is on for every table. Anyone can read jokes and the daily theme. Members see published posts, but only each post's chosen caption (plus their own drafts and candidates). Members can only edit their own profile, create posts under their own id (10 per day), pick and publish their own post's caption, delete their own losing captions, remix only their own posts, and see their own votes. Vote records, caption tallies, and post authors are written by triggers, and members can't update any other post column, so none of it can be spoofed from the client. A photo can never have more than 4 captions.
 
 ## Deploying
 

@@ -10,8 +10,8 @@ import { judgeMatchup, skipMatchup, type BattleRecord } from "./actions";
 import styles from "@/components/game.module.css";
 
 /**
- * Post vs. post: tap the funnier photo + caption (or press ← / →). After a
- * pick both posts' records show for a moment, then the next pair loads.
+ * Upload vs. upload: tap the funnier photo + caption (or press ← / →). After
+ * a vote both uploads' records show for a moment, then the next pair loads.
  */
 export function Arena({ initial, judgedToday }: { initial: Matchup | null; judgedToday: number }) {
   const [matchup, setMatchup] = useState(initial);
@@ -86,14 +86,14 @@ export function Arena({ initial, judgedToday }: { initial: Matchup | null; judge
     return (
       <div className={styles.empty}>
         <Mascot mood="sleepy" size={84} />
-        <p className={styles.emptyTitle}>You&apos;ve judged every matchup! 🎉</p>
+        <p className={styles.emptyTitle}>You&apos;ve voted on every matchup! 🎉</p>
         <p>
-          {count > 0 ? `${count} picks today. ` : ""}New battles show up as people post. Post your own, or vote on
+          {count > 0 ? `${count} votes today. ` : ""}New matchups show up as people upload. Upload your own, or vote on
           today&apos;s AI meme.
         </p>
         <div className={styles.detailActions}>
-          <Link href="/post/new" className="btn btn-primary">
-            📸 Post a photo
+          <Link href="/upload" className="btn btn-primary">
+            📸 Upload a photo
           </Link>
           <Link href="/daily" className="btn btn-secondary">
             🤖 Today&apos;s AI meme
@@ -112,7 +112,7 @@ export function Arena({ initial, judgedToday }: { initial: Matchup | null; judge
     <section className={styles.arena} aria-live="polite">
       <div className={styles.arenaStatus}>
         <span>
-          🔥 <strong>{count}</strong> {count === 1 ? "pick" : "picks"} today
+          🔥 <strong>{count}</strong> {count === 1 ? "vote" : "votes"} today
         </span>
         {streak >= 3 && <span className={styles.streak}>{streak} in a row!</span>}
         <span className={styles.remaining}>{matchup.remaining} matchups left</span>
@@ -134,7 +134,7 @@ export function Arena({ initial, judgedToday }: { initial: Matchup | null; judge
               data-side={i === 0 ? "left" : "right"}
               onClick={() => choose(post, other)}
               disabled={Boolean(picked) || pending}
-              aria-label={`Pick this post: ${post.caption}`}
+              aria-label={`Vote for this upload: ${post.caption}`}
             >
               <span className={styles.postPhoto}>
                 <span className={styles.postKey} aria-hidden="true">
@@ -151,7 +151,7 @@ export function Arena({ initial, judgedToday }: { initial: Matchup | null; judge
                 <span>{post.caption}</span>
               </span>
               <span className={styles.postBy}>by {post.author_name ?? "a member"}</span>
-              {state === "won" && <span className={styles.contenderBurst}>😂 Your pick!</span>}
+              {state === "won" && <span className={styles.contenderBurst}>😂 Your vote!</span>}
               {rate !== null && record && (
                 <span className={styles.rate}>
                   <span className={styles.rateBar}>
@@ -171,7 +171,7 @@ export function Arena({ initial, judgedToday }: { initial: Matchup | null; judge
       <div className={styles.quickActions}>
         {picked ? (
           <button type="button" className="btn btn-primary" onClick={advance} disabled={next === undefined}>
-            {next === undefined ? "Counting votes…" : "Next battle →"}
+            {next === undefined ? "Counting votes…" : "Next matchup →"}
           </button>
         ) : (
           <button type="button" className="btn btn-secondary" onClick={skip} disabled={pending}>
@@ -185,7 +185,7 @@ export function Arena({ initial, judgedToday }: { initial: Matchup | null; judge
       <p className={styles.keys}>Tip: ← and → pick, ↓ skips.</p>
       {error && (
         <p className={styles.error} role="alert">
-          That pick didn&apos;t save. Try again.
+          That vote didn&apos;t save. Try again.
         </p>
       )}
     </section>

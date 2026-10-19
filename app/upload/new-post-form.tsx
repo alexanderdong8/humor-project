@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { createPost } from "../actions";
+import { createPost } from "@/app/post/actions";
 import styles from "@/components/game.module.css";
 
 type Props = {

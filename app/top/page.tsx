@@ -9,7 +9,7 @@ import styles from "@/components/game.module.css";
 
 export const metadata: Metadata = {
   title: "Leaderboard",
-  description: "The funniest posts on Punchline, ranked by their head-to-head battle record.",
+  description: "The funniest uploads on Punchline, ranked by their head-to-head vote record.",
 };
 
 const TABS: { range: BoardRange; label: string }[] = [
@@ -32,7 +32,7 @@ function boardHref(range: BoardRange, page = 1) {
   return query ? `/top?${query}` : "/top";
 }
 
-/** Browse-only: the leaderboard shows battle results; voting happens in /battle. */
+/** Browse-only: the leaderboard shows vote results; voting happens in /vote. */
 export default async function TopPage(props: PageProps<"/top">) {
   const searchParams = await props.searchParams;
   const rangeParam = first(searchParams.range);
@@ -47,14 +47,14 @@ export default async function TopPage(props: PageProps<"/top">) {
       <div>
         <p className={styles.kicker}>🏆 Leaderboard</p>
         <h1 className={styles.title}>
-          The <em>funniest</em> posts.
+          The <em>funniest</em> uploads.
         </h1>
         <p className={styles.lede}>
-          Ranked by head-to-head battle record. Want to move the rankings? Vote in Battle.
+          Ranked by head-to-head vote record. Want to move the rankings? Go vote.
         </p>
       </div>
-      <Link href="/battle" className="btn btn-primary">
-        ⚔️ Go battle
+      <Link href="/vote" className="btn btn-primary">
+        🗳️ Go vote
       </Link>
     </header>
   );
@@ -122,9 +122,9 @@ export default async function TopPage(props: PageProps<"/top">) {
         <div className={styles.empty}>
           <Mascot mood="sleepy" size={72} />
           <p className={styles.emptyTitle}>{range === "today" ? "No posts yet today." : "Nothing here yet."}</p>
-          <p>Post a photo and it&apos;ll show up here once people start battling it.</p>
-          <Link href="/post/new" className="btn btn-secondary">
-            📸 Post a photo
+          <p>Upload a photo and it&apos;ll show up here once people start voting on it.</p>
+          <Link href="/upload" className="btn btn-secondary">
+            📸 Upload a photo
           </Link>
         </div>
       ) : (
