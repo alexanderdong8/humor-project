@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { JokeCard } from "@/components/joke-card";
 import { displayName, isProfileComplete, requireUser } from "@/lib/auth";
-import { JOKE_COLUMNS, type Joke } from "@/lib/jokes";
+import { getMyPosts, winRate } from "@/lib/battle";
+import { categoryEmoji, getJokeCategories, JOKE_COLUMNS, type Joke } from "@/lib/jokes";
 import { createClient } from "@/lib/supabase/server";
+import { FavoritePicker } from "./favorite-picker";
 import styles from "@/components/account.module.css";
 
 export const metadata: Metadata = {
@@ -13,6 +16,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+/** The member's home base: their joke set, their posts and battle records, and shortcuts. */
 export default async function MembersPage() {
   // The proxy already bounced signed-out visitors; this is the authoritative check.
   const { user, profile } = await requireUser();
@@ -21,12 +25,11 @@ export default async function MembersPage() {
   const supabase = await createClient();
   let query = supabase.from("jokes").select(JOKE_COLUMNS);
   if (profile.favorite_category) query = query.eq("category", profile.favorite_category);
-  const { data: jokes } = await query.order("id").limit(6).returns<Joke[]>();
-
-  const memberSince = new Date(profile.created_at).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const [{ data: jokes }, categories, posts] = await Promise.all([
+    query.order("id").limit(6).returns<Joke[]>(),
+    getJokeCategories(),
+    getMyPosts(user.id),
+  ]);
 
   return (
     <main id="main" className={styles.page}>
@@ -40,34 +43,110 @@ export default async function MembersPage() {
             </h1>
           </div>
         </div>
-        <p className={styles.memberMeta}>
-          <span>
-            Member since <strong>{memberSince}</strong>
-          </span>
-          <span>
-            Favorite <strong>{profile.favorite_category ?? "Anything goes"}</strong>
-          </span>
-        </p>
 
-        <h2 className={styles.sectionTitle}>
-          {profile.favorite_category ? `Your ${profile.favorite_category} set` : "Tonight’s set"}
-        </h2>
-        <ul className={styles.jokeGrid}>
-          {(jokes ?? []).map((joke, i) => (
-            <li key={joke.id}>
-              <JokeCard joke={joke} index={i} />
-            </li>
-          ))}
-        </ul>
+        <details className={styles.help}>
+          <summary>
+            <span aria-hidden="true">ⓘ</span> What is the Green Room?
+          </summary>
+          <div>
+            <p>
+              In comedy, the green room is where performers hang out backstage. Here it&apos;s your home base:
+            </p>
+            <ul>
+              <li>
+                <strong>Your joke set:</strong> pick a favorite kind of joke below and we&apos;ll line up jokes from it.
+                Tap the card to reveal each punchline.
+              </li>
+              <li>
+                <strong>Your posts:</strong> every photo you&apos;ve posted, its caption, and its battle record. Open a
+                post to remix its caption.
+              </li>
+              <li>
+                <strong>Shortcuts</strong> to Battle, the Daily AI Meme, and posting a new photo.
+              </li>
+            </ul>
+          </div>
+        </details>
 
-        <div className={styles.actions} style={{ marginTop: "2rem" }}>
-          <Link href="/jokes" className="btn btn-primary">
-            Browse the full library
+        <div className={styles.shortcuts}>
+          <Link href="/battle" className="btn btn-primary">
+            ⚔️ Battle
+          </Link>
+          <Link href="/daily" className="btn btn-secondary">
+            🤖 Daily meme
+          </Link>
+          <Link href="/post/new" className="btn btn-secondary">
+            📸 Post a photo
           </Link>
           <Link href="/profile" className="btn btn-secondary">
-            {profile.favorite_category ? "Change your favorite" : "Pick a favorite"}
+            ✏️ Edit profile
           </Link>
         </div>
+
+        <section className={styles.block} aria-labelledby="set-title">
+          <h2 id="set-title" className={styles.sectionTitle}>
+            🎯 Your joke set
+          </h2>
+          <p className={styles.blockLede}>
+            Pick the kind of joke you like best and this set fills up with it. Change it anytime; it saves as soon as you
+            tap.
+          </p>
+          <FavoritePicker
+            categories={categories.map((name) => ({ name, emoji: categoryEmoji(name) }))}
+            current={profile.favorite_category}
+          />
+          <ul className={styles.jokeGrid}>
+            {(jokes ?? []).map((joke, i) => (
+              <li key={joke.id}>
+                <JokeCard joke={joke} index={i} />
+              </li>
+            ))}
+          </ul>
+          <Link href={profile.favorite_category ? `/jokes?category=${encodeURIComponent(profile.favorite_category)}` : "/jokes"} className={styles.textLink}>
+            See all {profile.favorite_category ? `${profile.favorite_category} ` : ""}jokes →
+          </Link>
+        </section>
+
+        <section className={styles.block} aria-labelledby="posts-title">
+          <h2 id="posts-title" className={styles.sectionTitle}>
+            📸 Your posts
+          </h2>
+          {posts.length === 0 ? (
+            <p className={styles.blockLede}>
+              You haven&apos;t posted yet. <Link href="/post/new">Post a photo</Link>, pick your caption, and send it into
+              battle.
+            </p>
+          ) : (
+            <ul className={styles.myPosts}>
+              {posts.map((post) => {
+                const rate = winRate(post.battle_wins, post.battle_losses);
+                const draft = post.status === "draft";
+                return (
+                  <li key={post.id}>
+                    <Link href={draft ? `/post/${post.id}/pick` : `/post/${post.id}`} className={styles.myPost}>
+                      <span className={styles.myThumb}>
+                        <Image src={post.image_url} alt="" fill sizes="72px" />
+                      </span>
+                      <span className={styles.myText}>
+                        <span className={styles.myCaption}>
+                          {draft ? "Draft: pick your caption to post it" : (post.caption?.text ?? "…")}
+                        </span>
+                        <span className={styles.myMeta}>
+                          {draft
+                            ? "Not in the battle yet"
+                            : `${post.battle_wins}W · ${post.battle_losses}L${rate !== null ? ` · ${rate}% win rate` : " · no battles yet"}`}
+                        </span>
+                      </span>
+                      <span className={styles.myGo} aria-hidden="true">
+                        →
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       </section>
     </main>
   );

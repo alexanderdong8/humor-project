@@ -7,7 +7,7 @@ import { getDailyTheme } from "@/lib/daily-theme";
 import { createClient } from "@/lib/supabase/server";
 import { Mascot } from "@/components/mascot";
 import { NewPostForm } from "./new-post-form";
-import styles from "../battle.module.css";
+import styles from "@/components/game.module.css";
 
 export const metadata: Metadata = {
   title: "Caption a photo",
@@ -37,14 +37,14 @@ export default async function NewPostPage() {
         ← Back to the battle
       </Link>
       <section className={styles.composer}>
-        <p className={styles.kicker}>📸 New post</p>
+        <p className={styles.kicker}>📸 New post · Step 1 of 2</p>
         <h1 className={styles.composerTitle}>
           Give us a photo. <em>We&apos;ll write the jokes.</em>
         </h1>
         <p className={styles.lede}>
           Upload any photo, from your camera roll or something you just saw on the street. AI writes four
-          funny captions for it, and your post goes on the board, where everyone votes for the caption that
-          made them laugh most.
+          captions, then you pick your favorite in a quick bracket. Your photo goes into the battle with just
+          that one caption.
         </p>
 
         {remaining === 0 ? (

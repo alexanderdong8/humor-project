@@ -3,7 +3,7 @@ import Link from "next/link";
 import { JokeCard } from "@/components/joke-card";
 import { Mascot } from "@/components/mascot";
 import { getSession } from "@/lib/auth";
-import { getTopCaptionToday } from "@/lib/battle";
+import { getTopPostToday, winRate } from "@/lib/battle";
 import { getDailyTheme, trendSourceLabel } from "@/lib/daily-theme";
 import { categoryEmoji, getJokeCategoryCounts, getJokeOfTheDay } from "@/lib/jokes";
 import styles from "./page.module.css";
@@ -11,11 +11,11 @@ import styles from "./page.module.css";
 const TILE_COLORS = ["--sun-soft", "--sky-soft", "--pink-soft", "--mint-soft", "--grape-soft", "--tomato-soft"];
 
 export default async function Home() {
-  const [{ user, profile }, jokeOfTheDay, categories, topCaption, daily] = await Promise.all([
+  const [{ user, profile }, jokeOfTheDay, categories, leader, daily] = await Promise.all([
     getSession(),
     getJokeOfTheDay(),
     getJokeCategoryCounts(),
-    getTopCaptionToday(),
+    getTopPostToday(),
     getDailyTheme(),
   ]);
   const totalJokes = categories.reduce((sum, c) => sum + c.joke_count, 0);
@@ -29,15 +29,15 @@ export default async function Home() {
             Jokes worth telling <span className={styles.marker}>twice.</span>
           </h1>
           <p className={styles.lede}>
-            Post a photo and AI writes the jokes. Vote on everyone else&apos;s, and crack open a library of
-            puns and one-liners while you&apos;re here.
+            Post a photo, let AI write the jokes, and pick your favorite. Then battle everyone else&apos;s posts,
+            vote on the daily AI meme, and crack open a library of puns while you&apos;re here.
           </p>
           <div className={styles.ctas}>
             <Link href="/battle" className="btn btn-primary">
               ⚔️ Play today&apos;s battle
             </Link>
-            <Link href="/jokes" className="btn btn-secondary">
-              📚 Browse jokes
+            <Link href="/daily" className="btn btn-secondary">
+              🤖 Today&apos;s AI meme
             </Link>
           </div>
           {totalJokes > 0 && (
@@ -74,7 +74,7 @@ export default async function Home() {
 
       <section className={styles.battle} aria-labelledby="battle-title">
         <div className={styles.battleCopy}>
-          <p className={styles.kicker}>⚔️ Caption Battle · Today&apos;s theme</p>
+          <p className={styles.kicker}>⚔️ Battle · Today&apos;s theme</p>
           <h2 id="battle-title" className={styles.battleTitle}>
             {daily.theme}
           </h2>
@@ -85,23 +85,23 @@ export default async function Home() {
           )}
           <ol className={styles.steps}>
             <li>
-              <span>📸</span> Post a funny photo
+              <span>📸</span> Post a photo
             </li>
             <li>
-              <span>🤖</span> AI writes 4 captions
+              <span>🏆</span> Pick your favorite of 4 AI captions
             </li>
             <li>
-              <span>⚡</span> Everyone votes, two at a time
+              <span>⚔️</span> Battle other posts
             </li>
           </ol>
           <div className={styles.ctas}>
             {user ? (
               <>
-                <Link href="/battle/vote" className="btn btn-primary">
-                  ⚡ Quick Vote
+                <Link href="/battle" className="btn btn-primary">
+                  ⚔️ Battle
                 </Link>
-                <Link href="/battle/new" className="btn btn-secondary">
-                  📸 Caption a photo
+                <Link href="/post/new" className="btn btn-secondary">
+                  📸 Post a photo
                 </Link>
               </>
             ) : (
@@ -109,25 +109,30 @@ export default async function Home() {
                 <Link href="/login" className="btn btn-primary">
                   Sign in to play
                 </Link>
-                <Link href="/battle" className="btn btn-secondary">
-                  See the board
+                <Link href="/top" className="btn btn-secondary">
+                  🏆 See the leaderboard
                 </Link>
               </>
             )}
           </div>
         </div>
-        {topCaption ? (
-          <Link href={`/battle/${topCaption.id}`} className={styles.leader}>
-            <span className={styles.leaderBadge}>👑 Leading today · {topCaption.top_score} pts</span>
-            <span className={styles.leaderPhoto} style={{ backgroundImage: `url(${topCaption.image_url})` }} />
-            <span className={styles.leaderText}>“{topCaption.top_caption}”</span>
-            <span className={styles.leaderBy}>by {topCaption.author_name ?? "a member"}</span>
+        {leader ? (
+          <Link href={`/post/${leader.id}`} className={styles.leader}>
+            <span className={styles.leaderBadge}>
+              👑 Leading today · {leader.battle_wins}W–{leader.battle_losses}L
+              {winRate(leader.battle_wins, leader.battle_losses) !== null
+                ? ` · ${winRate(leader.battle_wins, leader.battle_losses)}%`
+                : ""}
+            </span>
+            <span className={styles.leaderPhoto} style={{ backgroundImage: `url(${leader.image_url})` }} />
+            <span className={styles.leaderText}>“{leader.caption}”</span>
+            <span className={styles.leaderBy}>by {leader.author_name ?? "a member"}</span>
           </Link>
         ) : (
           <div className={styles.leaderEmpty}>
             <Mascot mood="wow" size={72} />
             <p className={styles.leaderEmptyTitle}>The crown is up for grabs!</p>
-            <p>Nobody&apos;s posted today. Be the first.</p>
+            <p>No post has won a battle today. Yours could be first.</p>
           </div>
         )}
       </section>

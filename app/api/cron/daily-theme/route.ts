@@ -8,7 +8,7 @@ export const maxDuration = 300;
 
 /**
  * Called by Vercel Cron just after midnight Eastern (see vercel.json) to set
- * up the day's Caption Battle: the theme (from trends) and the AI photo post.
+ * up the day: the theme (from trends) and the daily AI meme.
  * Vercel signs the request with CRON_SECRET; anything else is rejected.
  */
 export async function GET(request: NextRequest) {
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
     const theme = await generateDailyTheme(undefined, { replace, dryRun });
     if (!theme) return NextResponse.json({ ok: false, theme });
     if (dryRun) {
-      // Also find, pick, and caption a photo, but save nothing.
+      // Also pick and caption a meme, but save nothing.
       const post = await buildDailyPost(theme.day, theme).catch((error) => ({ error: String(error) }));
       const summary =
-        post && "photo" in post
-          ? { photo: post.photo.url, credit: post.photo.title, queries: post.queries, captions: post.captions, model: post.model }
+        "template" in post
+          ? { meme: post.template.name, image: post.template.url, captions: post.captions, model: post.model }
           : post;
       return NextResponse.json({ ok: true, theme, dailyPost: summary });
     }

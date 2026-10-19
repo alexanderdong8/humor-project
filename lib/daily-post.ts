@@ -1,41 +1,26 @@
 import { GoogleGenAI } from "@google/genai";
 import pg from "pg";
-import { MODELS, writeCaptions, type CaptionImage } from "@/lib/ai/caption-writer";
+import { MODELS, writeCaptions } from "@/lib/ai/caption-writer";
 import { BOT_USER_AGENT, fetchImage } from "@/lib/ai/fetch-image";
 import { VOICES, type VoiceId } from "@/lib/battle";
 import type { DailyTheme } from "@/lib/daily-theme";
 
 /**
- * The daily AI post: every day the AI finds an openly licensed photo that fits
- * the theme (via Openverse, from Flickr and Wikimedia Commons), picks the
- * funniest safe one by looking at the candidates, and writes four captions.
- * It's posted as "Punchline AI" so there's always something to vote on.
+ * The daily AI meme: every day the AI picks a meme template from Imgflip's
+ * 100 most popular (Drake, Distracted Boyfriend, Two Buttons...) that fits the
+ * theme, then writes four captions for it in that meme's usual format. It's
+ * posted as "Punchline AI" at /daily, where members battle its captions.
  */
 
-type OpenverseImage = {
-  id: string;
-  title: string | null;
-  url: string;
-  thumbnail: string;
-  creator: string | null;
-  license: string;
-  license_version: string | null;
-  foreign_landing_url: string | null;
-  width: number | null;
-  height: number | null;
-};
+type MemeTemplate = { id: string; name: string; url: string; width: number; height: number; box_count: number };
 
-const SEARCH_PROMPT = `You help run Caption Battle, a game where Columbia students in New York vote on funny captions for a photo.
-Given today's theme, suggest 4 short image-search queries (1 to 3 words each) for finding a real photo that would be funny to caption.
-Prefer animals, food, objects, signs of everyday chaos, and city or campus scenes over photos of people.
-Avoid anything sad, violent, political, medical, or about real named people.`;
+const PICK_PROMPT = `You pick the meme template for Punchline's Daily AI Meme, where Columbia students in New York vote on which AI-written caption is funniest.
+Given today's theme and a list of popular meme templates, choose the ONE template that will make the funniest captions about the theme.
+Prefer templates people instantly recognize and that work with a single caption (reaction images and two-option formats are great).
+Avoid templates that depend on a specific real person's identity, or that are hard to caption in one line.`;
 
-const PICK_PROMPT = `You're choosing today's photo for Caption Battle, where Columbia students in New York vote on funny captions.
-Rank the numbered photos from best to worst for being fun to caption for today's theme. Leave out any photo that is:
-- not a real photo (diagrams, logos, maps, screenshots, mostly text)
-- unsafe for work, sad, disturbing, or about a tragedy
-- focused on an identifiable person's face
-Return only the numbers of suitable photos, best first.`;
+/** Skip templates used this recently so the daily meme doesn't repeat. */
+const REUSE_AFTER_DAYS = 45;
 
 function geminiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -43,50 +28,45 @@ function geminiClient() {
   return new GoogleGenAI({ apiKey });
 }
 
-/** Runs a JSON-returning Gemini call, falling back through the model list. */
-async function askJson<T>(contents: Parameters<GoogleGenAI["models"]["generateContent"]>[0]["contents"], system: string, schema: object) {
+async function getMemeTemplates(): Promise<MemeTemplate[]> {
+  const res = await fetch("https://api.imgflip.com/get_memes", {
+    headers: { "user-agent": BOT_USER_AGENT },
+    signal: AbortSignal.timeout(8000),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`imgflip responded ${res.status}`);
+  const body = (await res.json()) as { success?: boolean; data?: { memes?: MemeTemplate[] } };
+  if (!body.success) throw new Error("imgflip returned no memes");
+  return (body.data?.memes ?? []).filter((m) => m.url.startsWith("https://i.imgflip.com/") && m.width >= 300);
+}
+
+/** Asks Gemini which template fits today's theme, falling back through the model list. */
+async function chooseTemplate(templates: MemeTemplate[], theme: Pick<DailyTheme, "theme" | "idea">) {
   const ai = geminiClient();
+  const list = templates.map((t) => `${t.id} | ${t.name}`).join("\n");
+  const contents = `Today's theme: "${theme.theme}". ${theme.idea ?? ""}\n\nTemplates (id | name):\n${list}`;
   let lastError: unknown;
   for (const model of MODELS) {
     try {
       const res = await ai.models.generateContent({
         model,
         contents,
-        config: { systemInstruction: system, responseMimeType: "application/json", responseJsonSchema: schema },
+        config: {
+          systemInstruction: PICK_PROMPT,
+          responseMimeType: "application/json",
+          responseJsonSchema: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
+        },
       });
-      return { data: JSON.parse(res.text ?? "{}") as T, model };
+      const { id } = JSON.parse(res.text ?? "{}") as { id?: string };
+      const template = templates.find((t) => t.id === id?.trim());
+      if (template) return { template, model, prompt: `[system]\n${PICK_PROMPT}\n\n[user]\n${contents}` };
+      lastError = new Error(`${model} picked an unknown template: ${id}`);
     } catch (error) {
       console.warn(`[daily-post] ${model} failed, trying the next model`, error);
       lastError = error;
     }
   }
   throw lastError;
-}
-
-async function searchOpenverse(query: string): Promise<OpenverseImage[]> {
-  const params = new URLSearchParams({ q: query, page_size: "8", mature: "false", source: "flickr,wikimedia" });
-  const res = await fetch(`https://api.openverse.org/v1/images/?${params}`, {
-    headers: { "user-agent": BOT_USER_AGENT },
-    signal: AbortSignal.timeout(8000),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`openverse responded ${res.status}`);
-  const body = (await res.json()) as { results?: OpenverseImage[] };
-  return (body.results ?? []).filter(
-    (r) => r.url && r.thumbnail && (r.width ?? 0) >= 600 && (r.height ?? 0) >= 400,
-  );
-}
-
-function formatLicense(license: string, version: string | null) {
-  if (license === "cc0") return "CC0";
-  if (license === "pdm") return "Public domain";
-  return `CC ${license.toUpperCase()}${version ? ` ${version}` : ""}`;
-}
-
-function credit(photo: OpenverseImage) {
-  const title = photo.title?.trim() ? `“${photo.title.trim().slice(0, 80)}”` : "Photo";
-  const by = photo.creator?.trim() ? ` by ${photo.creator.trim().slice(0, 60)}` : "";
-  return `${title}${by} · ${formatLicense(photo.license, photo.license_version)}`;
 }
 
 /** Same voice rotation for everyone on a given day. */
@@ -96,73 +76,40 @@ function voiceForDay(day: string): VoiceId {
 }
 
 /**
- * Finds, picks, and captions today's photo without saving anything. Used by
+ * Picks and captions today's meme without saving anything. Used by
  * generateDailyPost, and on its own for the cron job's dry run.
  */
-export async function buildDailyPost(day: string, theme: Pick<DailyTheme, "theme" | "idea">) {
-  // 1. Search ideas for the theme.
-  const { data: search } = await askJson<{ queries?: string[] }>(
-    `Today's theme: "${theme.theme}". ${theme.idea ?? ""}`,
-    SEARCH_PROMPT,
-    { type: "object", properties: { queries: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 4 } }, required: ["queries"] },
-  );
-  const queries = (search.queries ?? []).map((q) => q.trim()).filter(Boolean).slice(0, 4);
-  if (queries.length === 0) queries.push(theme.theme);
+export async function buildDailyPost(
+  day: string,
+  theme: Pick<DailyTheme, "theme" | "idea">,
+  recentlyUsed: Set<string> = new Set(),
+) {
+  const all = await getMemeTemplates();
+  const fresh = all.filter((t) => !recentlyUsed.has(t.id));
+  const { template, model: pickModel, prompt: pickPrompt } = await chooseTemplate(fresh.length > 0 ? fresh : all, theme);
 
-  // 2. Openly licensed candidates from Flickr and Wikimedia Commons.
-  const results = (await Promise.all(queries.map((q) => searchOpenverse(q).catch(() => [])))).flat();
-  const unique = [...new Map(results.map((r) => [r.id, r])).values()].slice(0, 12);
-
-  // 3. Thumbnails, so the model can look at the options.
-  const thumbs = await Promise.all(
-    unique.map(async (photo) => {
-      try {
-        return { photo, image: await fetchImage(photo.thumbnail, 1.5 * 1024 * 1024) };
-      } catch {
-        return null;
-      }
-    }),
-  );
-  const candidates = thumbs.filter((t): t is { photo: OpenverseImage; image: CaptionImage } => t !== null).slice(0, 10);
-  if (candidates.length === 0) {
-    console.error("[daily-post] no usable photos for", queries);
-    return null;
-  }
-
-  // 4. Let the model pick the funniest safe photo.
-  const parts = candidates.flatMap((c, i) => [
-    { text: `Photo ${i + 1}:` },
-    { inlineData: { mimeType: c.image.mediaType, data: c.image.data } },
-  ]);
-  const { data: pick, model: pickModel } = await askJson<{ ranking?: number[] }>(
-    [{ role: "user", parts: [{ text: `Today's theme: "${theme.theme}".` }, ...parts] }],
-    PICK_PROMPT,
-    { type: "object", properties: { ranking: { type: "array", items: { type: "integer" } } }, required: ["ranking"] },
-  );
-  const ranked = (pick.ranking ?? [])
-    .map((n) => candidates[n - 1])
-    .filter((c): c is (typeof candidates)[number] => Boolean(c));
-  const chosen = ranked[0];
-  if (!chosen) {
-    console.error("[daily-post] the model found no suitable photo among", candidates.length);
-    return null;
-  }
-
-  // 5. Captions for the chosen photo (the thumbnail is plenty for the model).
   const voice = voiceForDay(day);
-  const result = await writeCaptions({ image: chosen.image, voice, theme: theme.theme });
+  const image = await fetchImage(template.url);
+  const result = await writeCaptions({
+    image,
+    voice,
+    theme: theme.theme,
+    context: `This image is the "${template.name}" meme template. Write captions the way people caption this meme (its usual format and joke structure), applied to the theme. Each caption is a single line shown under the image.`,
+  });
+
   const prompt = [
     result.prompt,
     "",
-    "[photo selection]",
-    `Search queries: ${queries.join(", ")}`,
-    `Picked Openverse image ${chosen.photo.id} from ${candidates.length} candidates (${pickModel}).`,
+    "[template selection]",
+    pickPrompt,
+    "",
+    `Picked Imgflip template ${template.id} (${template.name}) with ${pickModel}.`,
   ].join("\n");
 
-  return { photo: chosen.photo, voice, captions: result.captions, model: result.model, prompt, queries };
+  return { template, voice, captions: result.captions, model: result.model, prompt };
 }
 
-/** Creates today's AI photo post if it doesn't exist yet. Returns its id, or null if no photo worked. */
+/** Creates today's AI meme post if it doesn't exist yet. Returns its id. */
 export async function generateDailyPost(day: string, theme: Pick<DailyTheme, "theme" | "idea">) {
   const url = process.env.THEME_WRITER_DB_URL;
   if (!url) throw new Error("THEME_WRITER_DB_URL is not set");
@@ -173,9 +120,13 @@ export async function generateDailyPost(day: string, theme: Pick<DailyTheme, "th
     const existing = await client.query("select id from public.generations where daily_for = $1", [day]);
     if (existing.rows[0]) return existing.rows[0].id as string;
 
-    const built = await buildDailyPost(day, theme);
-    if (!built) return null;
-    const { photo, voice, captions, model, prompt } = built;
+    const recent = await client.query(
+      `select image_path from public.generations
+        where kind = 'daily' and image_path like 'imgflip:%' and daily_for > ($1::date - $2::int)`,
+      [day, REUSE_AFTER_DAYS],
+    );
+    const recentlyUsed = new Set(recent.rows.map((r) => String(r.image_path).slice("imgflip:".length)));
+    const { template, voice, captions, model, prompt } = await buildDailyPost(day, theme, recentlyUsed);
 
     // Save the post and its captions as one transaction.
     await client.query("begin");
@@ -187,14 +138,14 @@ export async function generateDailyPost(day: string, theme: Pick<DailyTheme, "th
          returning id`,
         [
           day,
-          `openverse:${photo.id}`,
-          photo.url,
+          `imgflip:${template.id}`,
+          template.url,
           theme.theme,
           voice,
           prompt,
           model,
-          credit(photo),
-          photo.foreign_landing_url,
+          `“${template.name}” meme template · via Imgflip`,
+          `https://imgflip.com/memetemplate/${template.id}`,
         ],
       );
       const postId = rows[0].id as string;

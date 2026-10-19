@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import styles from "./battle.module.css";
+import styles from "./game.module.css";
 
 /** Native share sheet on phones, copy-to-clipboard everywhere else. */
 export function ShareButton() {

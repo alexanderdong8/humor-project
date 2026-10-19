@@ -4,27 +4,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./site-header.module.css";
 
-type Props = { signedIn: boolean };
+const LINKS = [
+  { href: "/battle", emoji: "⚔️", label: "Battle", match: ["/battle", "/post"] },
+  { href: "/top", emoji: "🏆", label: "Top", match: ["/top"] },
+  { href: "/daily", emoji: "🤖", label: "Daily", match: ["/daily"] },
+  { href: "/jokes", emoji: "📚", label: "Jokes", match: ["/jokes"] },
+];
 
-export function NavLinks({ signedIn }: Props) {
+export function NavLinks() {
   const pathname = usePathname();
-  const current = (prefix: string) => (pathname === prefix || pathname.startsWith(`${prefix}/`) ? "page" : undefined);
+  const isCurrent = (prefixes: string[]) =>
+    prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ? "page" : undefined;
 
   return (
     <nav className={styles.nav} aria-label="Main">
-      <Link href="/battle" aria-current={current("/battle")}>
-        <span aria-hidden="true">⚔️</span> Battle
-      </Link>
-      <Link href="/jokes" aria-current={current("/jokes")}>
-        <span aria-hidden="true">📚</span> Jokes
-      </Link>
-      <Link
-        href={signedIn ? "/members" : "/login"}
-        aria-current={current("/members")}
-        title={signedIn ? undefined : "Members only: sign in to enter"}
-      >
-        <span aria-hidden="true">{signedIn ? "🎤" : "🔒"}</span> Green Room
-      </Link>
+      {LINKS.map((link) => (
+        <Link key={link.href} href={link.href} aria-current={isCurrent(link.match)}>
+          <span aria-hidden="true">{link.emoji}</span> {link.label}
+        </Link>
+      ))}
     </nav>
   );
 }

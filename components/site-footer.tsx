@@ -12,10 +12,11 @@ export function SiteFooter() {
           <p>{site.tagline}</p>
         </div>
         <nav className={styles.links} aria-label="Footer">
-          <Link href="/battle">Caption Battle</Link>
+          <Link href="/battle">Battle</Link>
+          <Link href="/top">Leaderboard</Link>
+          <Link href="/daily">Daily AI Meme</Link>
           <Link href="/jokes">Joke Library</Link>
           <Link href="/members">Green Room</Link>
-          <Link href="/profile">Profile</Link>
         </nav>
         <p className={styles.fine}>
           © {new Date().getFullYear()} {site.name}. Made with puns in New York. Please groan responsibly.

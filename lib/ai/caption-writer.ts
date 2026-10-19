@@ -47,12 +47,15 @@ type Input = {
   mood?: MoodId;
   /** Captions already on the post, so a remix doesn't repeat them. */
   avoid?: string[];
+  /** Extra framing, e.g. which meme template the image is. */
+  context?: string;
 };
 
-function userInstructions({ voice, theme, mood, avoid = [], count }: Omit<Input, "image"> & { count: number }) {
+function userInstructions({ voice, theme, mood, avoid = [], context, count }: Omit<Input, "image"> & { count: number }) {
   const style = VOICES[voice];
   const lines = [
     `Write ${count} captions.`,
+    ...(context ? [context] : []),
     `Style: ${style.label}. ${style.prompt}`,
     `For flavor, an example in this style (don't reuse it): "${style.example}"`,
     theme

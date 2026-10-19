@@ -9,11 +9,12 @@ Built with Next.js 16 (App Router) and Supabase (Postgres, Auth, Storage), deplo
 - **Joke of the day** on the home page, the same for every visitor on a given day.
 - **Google sign-in** via Supabase Auth. New users get a `profiles` row from a database trigger and are asked for their name before entering.
 - **Profile** (`/profile`): edit first and last name and a favorite category, and upload a photo to Supabase Storage.
-- **Caption Battle** (`/battle`): members upload a photo, pick a caption style (Group chat, Sarcastic, Wholesome, Dramatic), and Google Gemini writes four captions. Everyone can browse; signed-in members vote each caption up or down. A new theme every day, generated from what's trending in New York (X trends when reachable, otherwise Google's trending searches), and the "Today's top" board resets at midnight Eastern. Each post has a shareable page.
-- **Quick Vote** (`/battle/vote`): two captions from the same photo, tap the funnier one (or use ← / →). Every pick is a row in `caption_duels`; head-to-head wins count toward a caption's score and the Crowd favorite. Members never judge their own posts or the same pair twice.
-- **Daily AI photo**: each night the AI turns the day's theme into search queries, pulls openly licensed photos from Openverse (Flickr and Wikimedia Commons), looks at the candidates and picks the funniest safe one, then writes four captions. It's posted as "Punchline AI" with the photo credit, pinned at the top of today's board, and served first in Quick Vote.
-- **Remix**: under a post, members ask for 3 more captions that are 😈 Meaner, 😂 Funnier, or 🫠 Relatable. The AI sees the existing captions so it doesn't repeat them. Each remix (with its prompt) is saved in `caption_remixes`; limits are 6 per post and 20 per member per day, enforced by RLS.
-- **Green Room** (`/members`): members-only picks based on your favorite category. Signed-out visitors are redirected to `/login`.
+- **Post a photo** (`/post/new` → `/post/[id]/pick`): upload a photo and pick a caption style (Group chat, Sarcastic, Wholesome, Dramatic); Google Gemini writes 4 captions. The post stays a private draft while you knock the captions out in a bracket (two semifinals and a final). The winner becomes the photo's **only** caption and the post goes live; the losing captions are deleted.
+- **Battle** (`/battle`), the one community vote: two posts (photo + caption) side by side; tap the funnier (← / → work too). Every pick is a row in `post_battles` and updates both posts' win/loss records. Members never judge their own posts or the same matchup twice. A new theme every day, generated from what's trending in New York (X trends when reachable, otherwise Google's trending searches).
+- **Leaderboard** (`/top`): browse-only rankings by battle record (Today / This week / All-time). Voting only happens in Battle.
+- **Daily AI Meme** (`/daily`): each night the AI picks a meme template from Imgflip's 100 most popular for the day's theme and writes 4 captions in that meme's format. Members battle its captions two at a time (rows in `caption_duels`) and see live standings, plus yesterday's winner. It lives on its own route, separate from member posts.
+- **Remix** (post page, owner only): get 3 new captions that are 😈 Meaner, 😂 Funnier, or 🫠 Relatable, then battle them against your current caption. The winner stays and the rest are deleted, so a photo never has more than 4 captions (enforced by a database trigger). Remixes aren't capped per photo; each member gets 20 a day. Each remix and its prompt are saved in `caption_remixes`.
+- **Green Room** (`/members`): your home base, with a "What is the Green Room?" help panel, a joke set you tune by tapping a favorite category (saves instantly), all your posts with their battle records (and drafts waiting for a caption), and shortcuts. Signed-out visitors are redirected to `/login`.
 
 ## Local development
 
@@ -41,6 +42,7 @@ Run these in the Supabase SQL Editor, in order. Each one is safe to re-run excep
 | `supabase/battle_gating.sql` | Members-only reads for posts and captions, plus the `battle_preview` function signed-out visitors use |
 | `supabase/daily_themes.sql` | `daily_themes` table and the write-only `theme_writer` role's access |
 | `supabase/quick_vote_remix_daily.sql` | `caption_duels` and `caption_remixes` tables, head-to-head tallies in each caption's score, daily AI posts (`kind = 'daily'`), and their RLS |
+| `supabase/battles_v2.sql` | Drafts and one chosen caption per post, the 4-caption cap, `post_battles` (the community vote) with win/loss records, owner-only remix, caption duels limited to the daily meme, and the updated signed-out preview |
 | `supabase/captions.sql` | `generations`, `captions`, `caption_votes` tables, vote-tally and author triggers, strict RLS, `caption-photos` Storage bucket |
 
 ## Auth setup
@@ -59,17 +61,17 @@ Every post stores the exact text prompt sent to the model (`generations.prompt`)
 
 A Vercel Cron job (`vercel.json`, 05:10 UTC, just after midnight Eastern) calls `/api/cron/daily-theme`. It scrapes the last 24 hours of X trending topics for New York from trends24.in (which republishes X's hourly lists and allows crawling), ranks them by how long and how high they trended, and asks Gemini to turn one into a safe, photographable theme, skipping tragedies, politics, and real people. If X trends can't be fetched (trends24 returns 403 to cloud servers, including Vercel's) it uses Google Trends' trending-searches RSS for New York, then the US, and the page labels the source accordingly, and if nothing is usable it falls back to a built-in rotation. The theme, the trend that inspired it, the full trend list, the prompt, and the model are stored in `daily_themes`. If a page is visited before the job runs, the theme is generated in the background right after that response.
 
-The same job then creates the daily AI photo post (see Features). Image generation isn't available on the free Gemini tier, so the AI finds and picks an openly licensed photo instead of drawing one.
+The same job then creates the daily AI meme (see Features) from an Imgflip template. Image generation isn't available on the free Gemini tier, so the AI picks a classic meme template instead of drawing one.
 
 The job writes through `THEME_WRITER_DB_URL`, a Postgres login (`theme_writer`) that can only write `daily_themes` and create the daily AI post and its captions, and only runs when called with `CRON_SECRET`.
 
 ## Members vs. visitors
 
-Signed-out visitors can't read posts or captions at all (RLS). They see a preview from the `battle_preview` database function: at most 3 posts, each with only its winning caption and a count of the hidden ones. The joke library shows them the first page of each category. Voting, posting, every caption, live scores, all pages of the library, and the Green Room require signing in.
+Signed-out visitors can't read posts or captions directly (RLS). They see a preview from the `battle_preview` database function: at most 3 published posts with their caption, and today's daily meme with its leading caption. The joke library shows them the first page of each category. Battling, posting, remixing, the full leaderboard, all four daily-meme captions, and the Green Room require signing in.
 
 ## Row level security
 
-RLS is on for every table. Anyone can read jokes and the daily theme; only members can read posts and captions. Members can only read and edit their own profile, create posts under their own id (10 per day), add captions to their own new post, and see or change their own votes. Vote tallies and post authors are written by triggers, so they can't be spoofed from the client.
+RLS is on for every table. Anyone can read jokes and the daily theme. Members see published posts, but only each post's chosen caption (plus their own drafts and candidates). Members can only edit their own profile, create posts under their own id (10 per day), pick and publish their own post's caption, delete their own losing captions, remix only their own posts, and see their own battle and duel picks. Battle records, caption tallies, and post authors are written by triggers, and members can't update any other post column, so none of it can be spoofed from the client. A photo can never have more than 4 captions.
 
 ## Deploying
 

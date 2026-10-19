@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { createPost } from "../actions";
-import styles from "../battle.module.css";
+import styles from "@/components/game.module.css";
 
 type Props = {
   userId: string;
@@ -96,7 +96,7 @@ export function NewPostForm({ userId, theme, voices, remaining }: Props) {
 
     setStage("writing");
     setLine(0);
-    // On success the action redirects to the new post.
+    // On success the action redirects to the caption bracket.
     const result = await createPost({ path, voice, useTheme });
     if (result?.error) {
       setError(result.error);
@@ -187,7 +187,7 @@ export function NewPostForm({ userId, theme, voices, remaining }: Props) {
 
       <div className={styles.submitRow}>
         <button type="submit" className="btn btn-primary" disabled={!file || busy}>
-          {stage === "uploading" ? "Uploading…" : stage === "writing" ? WRITING_LINES[line] : "Write 4 captions"}
+          {stage === "uploading" ? "Uploading…" : stage === "writing" ? WRITING_LINES[line] : "Write my 4 captions"}
         </button>
         <p className={styles.hint}>
           {remaining} {remaining === 1 ? "post" : "posts"} left today

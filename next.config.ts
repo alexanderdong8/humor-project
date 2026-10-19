@@ -21,7 +21,17 @@ const nextConfig: NextConfig = {
       // Openly licensed photos for the daily AI post (found through Openverse).
       { protocol: "https", hostname: "**.staticflickr.com" },
       { protocol: "https", hostname: "upload.wikimedia.org" },
+      // Meme templates for the daily AI meme.
+      { protocol: "https", hostname: "i.imgflip.com" },
     ],
+  },
+  async redirects() {
+    // Old Caption Battle URLs from before posts moved to /post.
+    return [
+      { source: "/battle/new", destination: "/post/new", permanent: true },
+      { source: "/battle/vote", destination: "/battle", permanent: true },
+      { source: "/battle/:id([0-9a-fA-F-]{36})", destination: "/post/:id", permanent: true },
+    ];
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

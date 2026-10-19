@@ -10,6 +10,7 @@ const ALLOWED_HOSTS = [
   new URL(supabaseUrl).hostname,
   "upload.wikimedia.org",
   "api.openverse.org",
+  "i.imgflip.com",
 ];
 
 function isAllowed(url: URL) {
