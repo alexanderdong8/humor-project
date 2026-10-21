@@ -31,7 +31,8 @@ export async function getNextMatchup(userId: string, skip: string[] = []): Promi
   const usable = (posts ?? []).filter((p) => p.caption);
   if (usable.length < 2) return null;
 
-  const { data: judged } = await supabase.from("post_battles").select("post_a, post_b");
+  // Filter explicitly: superadmins can read everyone's battles.
+  const { data: judged } = await supabase.from("post_battles").select("post_a, post_b").eq("user_id", userId);
   const seen = new Set([...(judged ?? []).map((b) => matchKey(b.post_a, b.post_b)), ...skip]);
 
   const todayStart = Date.parse(startOfNewYorkDay());

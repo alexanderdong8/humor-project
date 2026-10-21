@@ -42,7 +42,7 @@ export async function judgeDailyDuel(
 
   const [{ data: rows }, next] = await Promise.all([
     supabase.from("captions").select("id, duel_wins, duel_losses").in("id", [captionA, captionB]),
-    getNextDailyDuel(input.postId, skip.filter((k) => KEY.test(k))),
+    getNextDailyDuel(user.id, input.postId, skip.filter((k) => KEY.test(k))),
   ]);
   const stats = Object.fromEntries((rows ?? []).map((r) => [r.id, { wins: r.duel_wins, losses: r.duel_losses }]));
   return { ok: true, stats, next };
@@ -54,5 +54,5 @@ export async function skipDailyDuel(postId: string, skip: string[]): Promise<Due
     data: { user },
   } = await supabase.auth.getUser();
   if (!user || !UUID.test(postId)) return null;
-  return getNextDailyDuel(postId, skip.filter((k) => KEY.test(k)).slice(0, 50));
+  return getNextDailyDuel(user.id, postId, skip.filter((k) => KEY.test(k)).slice(0, 50));
 }

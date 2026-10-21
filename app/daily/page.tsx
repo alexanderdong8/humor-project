@@ -113,7 +113,7 @@ export default async function DailyPage() {
     );
   }
 
-  const duel = await getNextDailyDuel(post.id);
+  const duel = await getNextDailyDuel(user.id, post.id);
   const winner = previous ? standings(previous.captions)[0] : null;
 
   return (

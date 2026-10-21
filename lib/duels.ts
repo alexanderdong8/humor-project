@@ -17,11 +17,12 @@ type CandidateCaption = DuelSide & { duel_wins: number; duel_losses: number };
  * captions the member hasn't judged together (or skipped), favoring captions
  * with the fewest matchups so far.
  */
-export async function getNextDailyDuel(postId: string, skip: string[] = []): Promise<Duel | null> {
+export async function getNextDailyDuel(userId: string, postId: string, skip: string[] = []): Promise<Duel | null> {
   const supabase = await createClient();
   const [{ data: captions }, { data: judged }] = await Promise.all([
     supabase.from("captions").select("id, text, duel_wins, duel_losses").eq("generation_id", postId),
-    supabase.from("caption_duels").select("caption_a, caption_b").eq("generation_id", postId),
+    // Filter by user explicitly: superadmins can read everyone's duels.
+    supabase.from("caption_duels").select("caption_a, caption_b").eq("generation_id", postId).eq("user_id", userId),
   ]);
   const caps = (captions ?? []).map((c) => ({ ...c, mood: null })) as CandidateCaption[];
   const seen = new Set([...(judged ?? []).map((d) => pairKey(d.caption_a, d.caption_b)), ...skip]);

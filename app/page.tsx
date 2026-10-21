@@ -176,7 +176,7 @@ async function Dashboard({ user, profile, daily }: { user: User; profile: Profil
     getMyPosts(user.id),
     supabase.rpc("my_generations_today"),
   ]);
-  const duel = dailyPost ? await getNextDailyDuel(dailyPost.id) : null;
+  const duel = dailyPost ? await getNextDailyDuel(user.id, dailyPost.id) : null;
 
   return (
     <DashboardView
