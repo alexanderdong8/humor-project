@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CaptionWriterError, writeCaptions } from "@/lib/ai/caption-writer";
+import { quietly, supabaseDb } from "@/lib/ai/pipeline";
 import { fetchImage } from "@/lib/ai/fetch-image";
 import {
   chosenCaption,
@@ -61,6 +62,8 @@ export async function createPost(input: {
   }
   const mediaType = MEDIA_TYPES.find((t) => t === file.type) ?? "image/jpeg";
   const theme = input.useTheme ? (await getDailyTheme()).theme : null;
+  const imageUrl = supabase.storage.from(BUCKET).getPublicUrl(input.path).data.publicUrl;
+  const db = supabaseDb(supabase);
 
   let result: Awaited<ReturnType<typeof writeCaptions>>;
   try {
@@ -68,6 +71,8 @@ export async function createPost(input: {
       image: { data: Buffer.from(await file.arrayBuffer()).toString("base64"), mediaType },
       voice: input.voice,
       theme,
+      db,
+      log: { source: "upload", imageUrl },
     });
   } catch (error) {
     console.error("[post] caption writer failed", error);
@@ -77,7 +82,6 @@ export async function createPost(input: {
     };
   }
 
-  const imageUrl = supabase.storage.from(BUCKET).getPublicUrl(input.path).data.publicUrl;
   const { data: post, error: postError } = await supabase
     .from("generations")
     .insert({
@@ -107,6 +111,10 @@ export async function createPost(input: {
     return { error: "We couldn't save your captions. Please try again." };
   }
 
+  if (result.requestId) {
+    const requestId = result.requestId;
+    await quietly(() => db.rpc("attach_generation_request", { p_id: requestId, p_generation: post.id }));
+  }
   redirect(`/post/${post.id}/pick`);
 }
 
@@ -182,6 +190,7 @@ export async function remixPost(postId: string, mood: string): Promise<RemixResu
     await supabase.from("captions").delete().eq("generation_id", postId).neq("id", post.caption_id);
   }
 
+  const db = supabaseDb(supabase);
   let result: Awaited<ReturnType<typeof writeCaptions>>;
   try {
     result = await writeCaptions({
@@ -191,6 +200,8 @@ export async function remixPost(postId: string, mood: string): Promise<RemixResu
       mood,
       avoid: current ? [current.text] : [],
       count: REMIX_CAPTIONS,
+      db,
+      log: { source: "remix", imageUrl: post.image_url },
     });
   } catch (error) {
     console.error("[post] remix failed", error);
@@ -216,6 +227,11 @@ export async function remixPost(postId: string, mood: string): Promise<RemixResu
   if (captionsError) {
     console.error("[post] saving remix captions failed", captionsError);
     return { error: `Couldn't add your ${MOODS[mood].label.toLowerCase()} captions. Try again.` };
+  }
+
+  if (result.requestId) {
+    const requestId = result.requestId;
+    await quietly(() => db.rpc("attach_generation_request", { p_id: requestId, p_generation: postId }));
   }
 
   redirect(`/post/${postId}/pick`);

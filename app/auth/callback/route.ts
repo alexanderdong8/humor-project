@@ -12,8 +12,12 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
 
   if (!code) {
-    console.error("[auth/callback] missing code", searchParams.get("error"), searchParams.get("error_description"));
-    return NextResponse.redirect(`${origin}/login?error=signin_failed`);
+    const description = searchParams.get("error_description") ?? "";
+    console.error("[auth/callback] missing code", searchParams.get("error"), description);
+    // The database refuses new accounts that aren't on the sign-up allowlist
+    // (managed in Backstage); Supabase reports that as a failed user insert.
+    const notAllowed = /saving new user|signup_not_allowed/i.test(description);
+    return NextResponse.redirect(`${origin}/login?error=${notAllowed ? "not_allowed" : "signin_failed"}`);
   }
 
   const supabase = await createClient();

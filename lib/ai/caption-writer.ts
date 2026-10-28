@@ -1,20 +1,9 @@
 import { ApiError, GoogleGenAI } from "@google/genai";
-import { MOODS, VOICES, type MoodId, type VoiceId } from "@/lib/battle";
+import { MOODS, type MoodId, type VoiceId } from "@/lib/battle";
+import { loadConfig, quietly, renderPrompt, type PipelineDb } from "@/lib/ai/pipeline";
 
-/** Tried in order: if one model is overloaded or rate limited, the next one takes the job. */
-export const MODELS = ["gemini-3.5-flash", "gemini-3.8-flash", "gemini-3.5-flash-lite"];
-
-const SYSTEM_PROMPT = `You write captions for Punchline, a comedy site where college students in New York post photos and vote on the funniest caption.
-
-Audience: Columbia undergrads who are chronically online, many of them new to New York, living in the dorms and exploring the city on weekends. Campus life, the subway, bodegas, dorms, dining halls, and being new to the city all land well.
-
-Write exactly the number of captions requested, all in the requested style. Each caption:
-- reacts to what is actually in the photo; specific details beat generic jokes
-- takes a different angle from the others (an observation, an exaggeration, a relatable confession, an absurd twist)
-- is one or two short sentences, under 120 characters
-- stands on its own: no numbering, surrounding quotation marks, or hashtags
-
-Keep it PG-13 and punch up, never down. Don't joke about anyone's body, looks, race, ethnicity, religion, gender, sexuality, disability, or age, and don't identify or guess who real people in the photo are. If people are in the photo, joke about the situation, not the person.`;
+/** The built-in model order, used when the database's list can't be read (see lib/ai/pipeline.ts). */
+export { DEFAULT_MODELS as MODELS } from "@/lib/ai/pipeline";
 
 function responseSchema(count: number) {
   return {
@@ -41,7 +30,7 @@ type Input = {
   image: CaptionImage;
   voice: VoiceId;
   theme: string | null;
-  /** How many captions to write: 4 for a new post, fewer for a remix. */
+  /** How many captions to write: 4 for a new post, fewer for a remix or a share of the daily meme. */
   count?: number;
   /** Remix mood, when adding more captions to an existing post. */
   mood?: MoodId;
@@ -49,26 +38,11 @@ type Input = {
   avoid?: string[];
   /** Extra framing, e.g. which meme template the image is. */
   context?: string;
+  /** Where to read the pipeline's settings from (and log to). Without it, built-in defaults are used. */
+  db?: PipelineDb;
+  /** Log this job as a generation request with its model calls. Needs `db`. */
+  log?: { source: "upload" | "remix" | "daily" | "admin"; imageUrl?: string | null };
 };
-
-function userInstructions({ voice, theme, mood, avoid = [], context, count }: Omit<Input, "image"> & { count: number }) {
-  const style = VOICES[voice];
-  const lines = [
-    `Write ${count} captions.`,
-    ...(context ? [context] : []),
-    `Style: ${style.label}. ${style.prompt}`,
-    `For flavor, an example in this style (don't reuse it): "${style.example}"`,
-    theme
-      ? `Theme: "${theme}". Lean into it if the photo fits; never force it.`
-      : "There's no theme; caption whatever is in the photo.",
-  ];
-  if (mood) lines.push(`Remix mood: ${MOODS[mood].label}. ${MOODS[mood].prompt}`);
-  if (avoid.length > 0) {
-    lines.push("These captions already exist. Don't repeat them or their jokes; find new angles:");
-    for (const text of avoid) lines.push(`- ${text}`);
-  }
-  return lines.join("\n");
-}
 
 function parseCaptions(text: string | undefined, count: number) {
   let raw: unknown;
@@ -87,21 +61,82 @@ function parseCaptions(text: string | undefined, count: number) {
 
 /**
  * Writes captions for a photo with Google Gemini: 4 for a new post, or a few
- * more in a given mood for a remix. Returns them with the exact text prompt
- * that was sent (the photo is stored separately) and the model that answered,
- * so all three can be saved.
+ * more in a given mood for a remix. The prompt is built from the style's
+ * prompt chain, examples, and terms, and models are tried in the configured
+ * order. Returns the captions with the exact text prompt that was sent (the
+ * photo is stored separately), the model that answered, and the id of the
+ * logged generation request.
  */
-export async function writeCaptions({ image, count = 4, ...rest }: Input) {
+export async function writeCaptions({ image, count = 4, voice, theme, mood, avoid = [], context, db, log }: Input) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new CaptionWriterError("GEMINI_API_KEY is not set", "Our caption writer is offline right now.");
   }
 
+  const config = await loadConfig(db, voice);
+  const { system, user } = renderPrompt(config.steps, {
+    count: String(count),
+    context: context ?? "",
+    examples: config.examples.map((e) => `- ${e}`).join("\n"),
+    theme_instruction: theme
+      ? `Theme: "${theme}". Lean into it if the photo fits; never force it.`
+      : "There's no theme; caption whatever is in the photo.",
+    terms: config.terms.map((t) => `- ${t.term}: ${t.definition}`).join("\n"),
+  });
+  // Remixes add their mood and the captions to steer away from.
+  if (mood) user.push(`Remix mood: ${MOODS[mood].label}. ${MOODS[mood].prompt}`);
+  if (avoid.length > 0) {
+    user.push("These captions already exist. Don't repeat them or their jokes; find new angles:");
+    for (const text of avoid) user.push(`- ${text}`);
+  }
+  const instructions = user.join("\n");
+  const prompt = `[system]\n${system}\n\n[user]\n<photo>\n${instructions}`;
+
+  const requestId =
+    db && log
+      ? ((await quietly(() =>
+          db.rpc("log_generation_request", {
+            p_source: log.source,
+            p_chain: config.chain,
+            p_voice: voice,
+            p_mood: mood ?? null,
+            p_theme: theme,
+            p_image_url: log.imageUrl ?? null,
+          }),
+        )) as string | null)
+      : null;
+  const logResponse = (model: string, started: number, response: string | null, error: string | null) =>
+    requestId
+      ? quietly(() =>
+          db!.rpc("log_llm_response", {
+            p_request: requestId,
+            p_model: model,
+            p_prompt: prompt,
+            p_response: response,
+            p_status: error ? "error" : "ok",
+            p_error: error,
+            p_latency_ms: Date.now() - started,
+          }),
+        )
+      : null;
+  const finish = (status: "succeeded" | "failed", model: string | null, captions: number, error: string | null) =>
+    requestId
+      ? quietly(() =>
+          db!.rpc("finish_generation_request", {
+            p_id: requestId,
+            p_status: status,
+            p_model: model,
+            p_caption_count: captions,
+            p_error: error,
+          }),
+        )
+      : null;
+
   const ai = new GoogleGenAI({ apiKey });
-  const instructions = userInstructions({ ...rest, count });
   let lastError: unknown;
 
-  for (const model of MODELS) {
+  for (const { api_model_id: model, temperature } of config.models) {
+    const started = Date.now();
     try {
       const response = await ai.models.generateContent({
         model,
@@ -112,14 +147,16 @@ export async function writeCaptions({ image, count = 4, ...rest }: Input) {
           },
         ],
         config: {
-          systemInstruction: SYSTEM_PROMPT,
+          systemInstruction: system,
           responseMimeType: "application/json",
           responseJsonSchema: responseSchema(count),
-          temperature: 1,
+          temperature,
         },
       });
 
       if (response.promptFeedback?.blockReason) {
+        await logResponse(model, started, null, `prompt blocked: ${response.promptFeedback.blockReason}`);
+        await finish("failed", model, 0, `prompt blocked: ${response.promptFeedback.blockReason}`);
         throw new CaptionWriterError(
           `prompt blocked: ${response.promptFeedback.blockReason}`,
           "We can't caption that photo. Try a different one.",
@@ -128,17 +165,17 @@ export async function writeCaptions({ image, count = 4, ...rest }: Input) {
 
       const captions = parseCaptions(response.text, count);
       if (captions.length === 0) {
+        await logResponse(model, started, response.text ?? null, "no captions in the response");
         lastError = new Error(`${model} returned no captions`);
         continue;
       }
 
-      return {
-        captions,
-        model,
-        prompt: `[system]\n${SYSTEM_PROMPT}\n\n[user]\n<photo>\n${instructions}`,
-      };
+      await logResponse(model, started, response.text ?? null, null);
+      await finish("succeeded", model, captions.length, null);
+      return { captions, model, prompt, requestId };
     } catch (error) {
       if (error instanceof CaptionWriterError) throw error;
+      await logResponse(model, started, null, error instanceof Error ? error.message : String(error));
       lastError = error;
       // Overloaded or rate limited: try the next model. Anything else is not going to get better.
       if (error instanceof ApiError && (error.status === 429 || error.status >= 500)) continue;
@@ -147,6 +184,7 @@ export async function writeCaptions({ image, count = 4, ...rest }: Input) {
   }
 
   console.error("[caption-writer] all models failed", lastError);
+  await finish("failed", null, 0, lastError instanceof Error ? lastError.message : String(lastError));
   if (lastError instanceof ApiError && lastError.status === 429) {
     throw new CaptionWriterError("rate limited", "Lots of people are posting right now. Try again in a minute.");
   }

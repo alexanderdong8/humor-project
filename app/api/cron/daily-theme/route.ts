@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
+import pg from "pg";
+import { pgDb } from "@/lib/ai/pipeline";
 import { buildDailyPost, generateDailyPost } from "@/lib/daily-post";
 import { generateDailyTheme } from "@/lib/daily-theme";
 
@@ -25,8 +27,14 @@ export async function GET(request: NextRequest) {
     const theme = await generateDailyTheme(undefined, { replace, dryRun });
     if (!theme) return NextResponse.json({ ok: false, theme });
     if (dryRun) {
-      // Also pick and caption a meme, but save nothing.
-      const post = await buildDailyPost(theme.day, theme).catch((error) => ({ error: String(error) }));
+      // Also pick and caption a meme with the database's settings, but save and log nothing.
+      const client = process.env.THEME_WRITER_DB_URL
+        ? new pg.Client({ connectionString: process.env.THEME_WRITER_DB_URL, ssl: { rejectUnauthorized: false } })
+        : null;
+      await client?.connect();
+      const post = await buildDailyPost(theme.day, theme, undefined, { db: client ? pgDb(client) : undefined })
+        .catch((error) => ({ error: String(error) }))
+        .finally(() => client?.end());
       const summary =
         "template" in post
           ? { meme: post.template.name, image: post.template.url, captions: post.captions, model: post.model }

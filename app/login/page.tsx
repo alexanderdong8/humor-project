@@ -28,7 +28,12 @@ export default async function LoginPage(props: PageProps<"/login">) {
           Sign in to upload photos, battle their AI captions, and vote on everyone else&apos;s.
         </p>
         <GoogleButton />
-        {typeof error === "string" && (
+        {error === "not_allowed" ? (
+          <p className={styles.error} role="alert">
+            Punchline is open to Columbia and Barnard emails and invited addresses. That Google account isn&apos;t on
+            the list yet. Try your school account.
+          </p>
+        ) : typeof error === "string" && (
           <p className={styles.error} role="alert">
             We couldn&apos;t sign you in. Please try again.
           </p>
